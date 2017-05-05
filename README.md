@@ -47,7 +47,7 @@ $ make CC=musl-gcc CONFIG_EXTRA_CFLAGS='-I /path/to/headers/include/'
 Create a directory for your root file system, for instance `/path/to/fs`. Next, create the basic filesystem structure:
 
 ```
-$ mkdir -p bin boot dev etc home lib mnt opt proc sbin srv sys
+$ mkdir -p bin boot dev etc home lib mnt opt proc run sbin srv sys
 $ mkdir -p usr/{bin,sbin,include,lib,share,src}
 $ mkdir -p var/{lib,lock,log,run,spool}
 $ install -d -m 0750 root
