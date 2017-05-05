@@ -5,6 +5,7 @@ Based on [this](https://github.com/MichielDerhaeg/build-linux) instruction. You'
 - Linux 4.11 kernel [sources](https://kernel.org)
 - [musl](https://www.musl-libc.org/)
 - Busybox 1.26.2 [sources](https://busybox.net)
+- Dropbear 2016.74 [sources](https://matt.ucc.asn.au/dropbear/dropbear.html)
 
 ## Building
 
@@ -17,8 +18,6 @@ $ cp kernel-config /path/to/kernel/.config
 $ cd /path/to/kernel/
 $ make -j8
 ```
-
-### Busybox with musl
 
 Generate kernel header files:
 
@@ -34,12 +33,24 @@ $ cp busybox.diff /path/to/headers
 $ patch -p0 < busybox.patch
 ```
 
+### Busybox with musl
+
 Unpack the Busybox sources to `/path/to/busybox/` and use the supplied `busybox-config` to build Busybox using musl libC:
 
 ```
 $ cp busybox-config /path/to/busybox/.config
 $ cd /path/to/busybox/
 $ make CC=musl-gcc CONFIG_EXTRA_CFLAGS='-I /path/to/headers/include/'
+```
+
+### Dropbear with musl
+
+Unpack Dropbear sources to `/path/to/dropbear` and compile it with musl libC compatibility:
+
+```
+$ cd /path/to/dropbear
+$ ./configure --disable-zlib CC=musl-libc CFLAGS='-I /path/to/headers/include'
+$ make STATIC=1
 ```
 
 ### Upserspace
@@ -59,6 +70,15 @@ In addition to that, you will need the Busybox userspace:
 ```
 $ cp /path/to/busybox/busybox /path/to/fs/bin/
 $ for util in $(/path/to/fs/bin/busybox --list-full); do ln -s /bin/busybox $util; done
+```
+
+And Dropbear:
+
+```
+$ cp /path/to/dropbear/dropbear /path/to/fs/bin/
+$ cp /path/to/dropbear/dbclient /path/to/fs/bin/
+$ cp /path/to/dropbear/dropbearkey /path/to/fs/bin/
+$ cp /path/to/dropbear/dropbearconvert /path/to/fs/bin/
 ```
 
 The rest of the root file system contents resides in the `rootfs` directory, you can simply copy them over:
