@@ -18,3 +18,4 @@ echo /sbin/mdev > /proc/sys/kernel/hotplug
 ip link set up dev lo
 
 mount -a
+mount -o remount,rw /
