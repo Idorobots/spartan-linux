@@ -86,5 +86,5 @@ $ echo -n 'n\np\n\n\n\nw\n' | fdisk /path/to/rootfs.img
 The kernel image & root filesystem can be run directly using QEMU:
 
 ```
-$ qemu-system-x86_64 -kernel bzImage -append "init=/bin/sh root=/dev/sda1" /path/to/rootfs.img
+$ qemu-system-x86_64 -kernel bzImage -append "root=/dev/sda1" /path/to/rootfs.img
 ```
