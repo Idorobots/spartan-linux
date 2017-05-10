@@ -40,7 +40,7 @@ Unpack the Busybox sources to `/path/to/busybox/` and use the supplied `busybox-
 ```
 $ cp busybox.config /path/to/busybox/.config
 $ cd /path/to/busybox/
-$ make CC=musl-gcc CONFIG_EXTRA_CFLAGS='-I /path/to/headers/include/'
+$ make -j8 CC=musl-gcc CONFIG_EXTRA_CFLAGS='-I /path/to/headers/include/'
 ```
 
 ### Dropbear with musl
@@ -50,7 +50,7 @@ Unpack Dropbear sources to `/path/to/dropbear` and compile it with musl libC com
 ```
 $ cd /path/to/dropbear
 $ ./configure --disable-zlib CC=musl-gcc CFLAGS='-I /path/to/headers/include'
-$ make STATIC=1
+$ make -j8 STATIC=1
 ```
 
 ### Upserspace
