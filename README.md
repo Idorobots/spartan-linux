@@ -58,27 +58,24 @@ $ make -j8 STATIC=1
 Create a directory for your root file system, for instance `/path/to/fs`. Next, create the basic filesystem structure:
 
 ```
-$ mkdir -p bin boot dev etc home lib mnt opt proc run sbin srv sys
-$ mkdir -p usr/{bin,sbin,include,lib,share,src}
-$ mkdir -p var/{lib,lock,log,run,spool}
-$ install -d -m 0750 root
-$ install -d -m 1777 tmp
+$ mkdir -p /path/to/fs/{bin,boot,dev,etc,home,lib,mnt,opt,proc,run,sbin,srv,sys}
+$ mkdir -p /path/to/fs/usr/{bin,sbin,include,lib,share,src}
+$ mkdir -p /path/to/fs/var/{lib,lock,log,run,spool}
+$ install -d -m 0750 /path/to/fs/root
+$ install -d -m 1777 /path/to/fs/tmp
 ```
 
 In addition to that, you will need the Busybox userspace:
 
 ```
 $ cp /path/to/busybox/busybox /path/to/fs/bin/
-$ for util in $(/path/to/fs/bin/busybox --list-full); do ln -s /bin/busybox $util; done
+$ for util in $(/path/to/fs/bin/busybox --list-full); do ln -s /bin/busybox /path/to/fs/$util; done
 ```
 
 And Dropbear:
 
 ```
-$ cp /path/to/dropbear/dropbear /path/to/fs/bin/
-$ cp /path/to/dropbear/dbclient /path/to/fs/bin/
-$ cp /path/to/dropbear/dropbearkey /path/to/fs/bin/
-$ cp /path/to/dropbear/dropbearconvert /path/to/fs/bin/
+$ cp /path/to/dropbear/{dropbear,dbclient,dropbearkey,dropbearconvert} /path/to/fs/bin/
 ```
 
 The rest of the root file system contents resides in the `rootfs` directory, you can simply copy them over:
