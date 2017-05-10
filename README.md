@@ -14,7 +14,7 @@ Based on [this](https://github.com/MichielDerhaeg/build-linux) instruction. You'
 Unpack kernel sources to `/path/to/kernel/` and use the supplied `kernel-config` to build the kernel **bzImage**:
 
 ```
-$ cp kernel-config /path/to/kernel/.config
+$ cp kernel.config /path/to/kernel/.config
 $ cd /path/to/kernel/
 $ make -j8
 ```
@@ -29,8 +29,8 @@ $ make headers_install INSTALL_HDR_PATH=/path/to/headers/
 Patch the header files for compatibility with musl libC:
 
 ```
-$ cp busybox.diff /path/to/headers
-$ patch -p0 < busybox.patch
+$ cp kernel_headers.patch /path/to/headers
+$ patch -p0 < kernel_headers.patch
 ```
 
 ### Busybox with musl
@@ -38,7 +38,7 @@ $ patch -p0 < busybox.patch
 Unpack the Busybox sources to `/path/to/busybox/` and use the supplied `busybox-config` to build Busybox using musl libC:
 
 ```
-$ cp busybox-config /path/to/busybox/.config
+$ cp busybox.config /path/to/busybox/.config
 $ cd /path/to/busybox/
 $ make CC=musl-gcc CONFIG_EXTRA_CFLAGS='-I /path/to/headers/include/'
 ```
