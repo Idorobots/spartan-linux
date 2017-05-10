@@ -49,7 +49,7 @@ Unpack Dropbear sources to `/path/to/dropbear` and compile it with musl libC com
 
 ```
 $ cd /path/to/dropbear
-$ ./configure --disable-zlib CC=musl-libc CFLAGS='-I /path/to/headers/include'
+$ ./configure --disable-zlib CC=musl-gcc CFLAGS='-I /path/to/headers/include'
 $ make STATIC=1
 ```
 
