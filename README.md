@@ -90,12 +90,15 @@ Create a suitable-sized file in `/path/to/rootfs.img`, mount it as a loopback de
 
 ```
 $ fallocate -l64M /path/to/rootfs.img
-$ echo -n 'n\np\n\n\n\nw\n' | fdisk /path/to/rootfs.img
+$ echo -e 'o\nn\np\n\n\n\nw\n' | fdisk /path/to/rootfs.img
 # export LOOPBACK=`losetup -P -f --show /path/to/rootfs.img`
-# mkfs.ext4 "$(LOOPBACK)p1"
-# mount "$(LOOPBACK)p1" /path/to/mnt/rootfs.img
+# mkfs.ext4 "${LOOPBACK}p1"
+$ mkdir /path/to/mnt/rootfs.img
+# mount "${LOOPBACK}p1" /path/to/mnt/rootfs.img
 # cp -r /path/to/fs/* /path/to/mnt/rootfs.img
+# sync
 # umount /path/to/mnt/rootfs.img
+# losetup -d "${LOOPBACK}"
 ```
 
 ## Testing
