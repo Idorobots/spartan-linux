@@ -7,19 +7,19 @@ BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
 DROPBEAR_VERSION=2016.74
 DROPBEAR_URL=https://matt.ucc.asn.au/dropbear/dropbear-$(DROPBEAR_VERSION).tar.bz2
 
-BUILD_DIR="build"
-ABS_BUILD_DIR="$(shell pwd)/$(BUILD_DIR)"
-DIST_DIR="dist"
+BUILD_DIR=build
+ABS_BUILD_DIR=$(shell pwd)/$(BUILD_DIR)
+DIST_DIR=dist
 
 VPATH=$(BUILD_DIR)
 
 all: $(DIST_DIR)/bzImage $(DIST_DIR)/fs
 
 $(BUILD_DIR):
-	- mkdir $(BUILD_DIR)
+	mkdir $(BUILD_DIR); true
 
 $(DIST_DIR):
-	- mkdir $(DIST_DIR)
+	mkdir $(DIST_DIR); true
 
 $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(BUILD_DIR)
 	wget $(KERNEL_URL) -P $(BUILD_DIR)
@@ -34,7 +34,7 @@ $(DIST_DIR)/bzImage: $(BUILD_DIR)/linux-$(KERNEL_VERSION) kernel.config $(DIST_D
 
 $(BUILD_DIR)/include: $(DIST_DIR)/bzImage kernel_headers.patch
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH=$(ABS_BUILD_DIR)
-	- patch -p0 -d $(BUILD_DIR) -N < kernel_headers.patch
+	patch -p0 -d $(BUILD_DIR) -N < kernel_headers.patch; true
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(BUILD_DIR)
 	wget $(BUSYBOX_URL) -P $(BUILD_DIR)
@@ -71,7 +71,7 @@ $(DIST_DIR)/fs: $(DIST_DIR) rootfs $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbear
 	cp $(BUILD_DIR)/{dropbear,dbclient,dropbearkey,dropbearconvert} $(DIST_DIR)/fs/bin/
 
 clean:
-	- rm -rf build
-	- rm -rf dist
+	rm -rf build; true
+	rm -rf dist; true
 
 .PHONY: clean
