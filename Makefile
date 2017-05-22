@@ -7,53 +7,54 @@ BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
 DROPBEAR_VERSION=2016.74
 DROPBEAR_URL=https://matt.ucc.asn.au/dropbear/dropbear-$(DROPBEAR_VERSION).tar.bz2
 
-BUILD_DIR="$(shell pwd)/build"
+BUILD_DIR="build"
+ABS_BUILD_DIR="$(shell pwd)/$(BUILD_DIR)"
 
-all: bzImage busybox dropbear
+VPATH=$(BUILD_DIR)
+
+all: $(BUILD_DIR)/bzImage $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbear
 
 $(BUILD_DIR):
 	- mkdir $(BUILD_DIR)
 
-linux-$(KERNEL_VERSION).tar.xz:
-	wget $(KERNEL_URL)
+$(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(BUILD_DIR)
+	wget $(KERNEL_URL) -P $(BUILD_DIR)
 
-linux-$(KERNEL_VERSION): linux-$(KERNEL_VERSION).tar.xz
-	tar -xf linux-$(KERNEL_VERSION).tar.xz
+$(BUILD_DIR)/linux-$(KERNEL_VERSION): $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz
+	tar -xf $^ -C $(BUILD_DIR)
 
-bzImage: linux-$(KERNEL_VERSION) kernel.config $(BUILD_DIR)
-	cp kernel.config linux-$(KERNEL_VERSION)/.config
-	$(MAKE) -C linux-$(KERNEL_VERSION)
-	cp linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $(BUILD_DIR)
+$(BUILD_DIR)/bzImage: $(BUILD_DIR)/linux-$(KERNEL_VERSION) kernel.config
+	cp kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
+	cp $(BUILD_DIR)/linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $(BUILD_DIR)
 
-kernel-headers: linux-$(KERNEL_VERSION) kernel_headers.patch $(BUILD_DIR)
-	$(MAKE) -C linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH=$(BUILD_DIR)
-	patch -p0 -d $(BUILD_DIR) < kernel_headers.patch
+$(BUILD_DIR)/include: $(BUILD_DIR)/bzImage kernel_headers.patch
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH=$(ABS_BUILD_DIR)
+	- patch -p0 -d $(BUILD_DIR) -N < kernel_headers.patch
 
-busybox-$(BUSYBOX_VERSION).tar.bz2:
-	wget $(BUSYBOX_URL)
+$(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(BUILD_DIR)
+	wget $(BUSYBOX_URL) -P $(BUILD_DIR)
 
-busybox-$(BUSYBOX_VERSION): busybox-$(BUSYBOX_VERSION).tar.bz2
-	tar -xf busybox-$(BUSYBOX_VERSION).tar.bz2
+$(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
+	tar -xf $^ -C $(BUILD_DIR)
 
-busybox: busybox-$(BUSYBOX_VERSION) busybox.config $(BUILD_DIR)
-	cp busybox.config busybox-$(BUSYBOX_VERSION)/.config
-	$(MAKE) -C busybox-$(BUSYBOX_VERSION) CC=musl-gcc CONFIG_EXTRA_CFLAGS="-I $(BUILD_DIR)/include"
-	cp busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
+$(BUILD_DIR)/busybox: $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) busybox.config $(BUILD_DIR)/include
+	cp busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
+	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) CC=musl-gcc CONFIG_EXTRA_CFLAGS="-I $(ABS_BUILD_DIR)/include"
+	cp $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
 
-dropbear-$(DROPBEAR_VERSION).tar.bz2:
-	wget $(DROPBEAR_URL)
+$(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(BUILD_DIR)
+	wget $(DROPBEAR_URL) -P $(BUILD_DIR)
 
-dropbear-$(DROPBEAR_VERSION): dropbear-$(DROPBEAR_VERSION).tar.bz2
-	tar -xf dropbear-$(DROPBEAR_VERSION).tar.bz2
+$(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
+	tar -xf $^ -C $(BUILD_DIR)
 
-dropbear: dropbear-$(DROPBEAR_VERSION) $(BUILD_DIR)
-	(cd dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib CC=musl-gcc CFLAGS="-I $(BUILD_DIR)/include")
-	$(MAKE) -C dropbear-$(DROPBEAR_VERSION) STATIC=1
-	cp dropbear-$(DROPBEAR_VERSION)/{dropbear,dbclient,dropbearkey,dropbearconvert} $(BUILD_DIR)
+$(BUILD_DIR)/dropbear: $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) $(BUILD_DIR)/include
+	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib CC=musl-gcc CFLAGS="-I $(ABS_BUILD_DIR)/include")
+	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) STATIC=1
+	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/{dropbear,dbclient,dropbearkey,dropbearconvert} $(BUILD_DIR)
 
 clean:
-	- rm linux-$(KERNEL_VERSION).tar.xz
-	- rm -rf linux-$(KERNEL_VERSION)
 	- rm -rf build
 
 .PHONY: clean
