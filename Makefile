@@ -4,7 +4,7 @@ KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).
 BUSYBOX_VERSION=1.26.2
 BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
 
-DROPBEAR_VERSION=2016.74
+DROPBEAR_VERSION=2017.75
 DROPBEAR_URL=https://matt.ucc.asn.au/dropbear/dropbear-$(DROPBEAR_VERSION).tar.bz2
 
 BUILD_DIR=build
