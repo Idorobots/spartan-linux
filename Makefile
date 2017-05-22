@@ -1,12 +1,15 @@
 KERNEL_VERSION=4.11.2
 KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).tar.xz
 
-BUILD_DIR=build
+BUSYBOX_VERSION=1.26.2
+BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
 
-all: bzImage
+BUILD_DIR="$(shell pwd)/build"
+
+all: bzImage busybox
 
 $(BUILD_DIR):
-	mkdir $(BUILD_DIR)
+	- mkdir $(BUILD_DIR)
 
 linux-$(KERNEL_VERSION).tar.xz:
 	wget $(KERNEL_URL)
@@ -20,10 +23,23 @@ bzImage: linux-$(KERNEL_VERSION) kernel.config $(BUILD_DIR)
 	cp linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $(BUILD_DIR)
 
 kernel-headers: linux-$(KERNEL_VERSION) kernel_headers.patch $(BUILD_DIR)
-	$(MAKE) -C linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH="$(shell pwd)/$(BUILD_DIR)"
+	$(MAKE) -C linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH=$(BUILD_DIR)
 	patch -p0 -d $(BUILD_DIR) < kernel_headers.patch
+
+busybox-$(BUSYBOX_VERSION).tar.bz2:
+	wget $(BUSYBOX_URL)
+
+busybox-$(BUSYBOX_VERSION): busybox-$(BUSYBOX_VERSION).tar.bz2
+	tar -xf busybox-$(BUSYBOX_VERSION).tar.bz2
+
+busybox: busybox-$(BUSYBOX_VERSION) busybox.config $(BUILD_DIR)
+	cp busybox.config busybox-$(BUSYBOX_VERSION)/.config
+	$(MAKE) -C busybox-$(BUSYBOX_VERSION) CC=musl-gcc CONFIG_EXTRA_CFLAGS="-I $(BUILD_DIR)/include"
+	cp busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
 
 clean:
 	- rm linux-$(KERNEL_VERSION).tar.xz
 	- rm -rf linux-$(KERNEL_VERSION)
 	- rm -rf build
+
+.PHONY: clean
