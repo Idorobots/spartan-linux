@@ -1,11 +1,13 @@
 # Spartan Linux
 
-Based on [this](https://github.com/MichielDerhaeg/build-linux) instruction. You'll need:
-
-- [musl](https://www.musl-libc.org/)
-- *nix environment (make, wget, tar, patch, etc)
+A Linux kernel with statically-compiled Busybox & Dropbear userspace. Based on [this](https://github.com/MichielDerhaeg/build-linux) instruction.
 
 ## Building
+
+You'll need:
+
+- *nix environment (make, wget, tar, patch, etc)
+- [musl](https://www.musl-libc.org/)
 
 ### Kernel & Userspace
 
