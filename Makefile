@@ -22,7 +22,7 @@ $(DIST_DIR):
 	mkdir $(DIST_DIR); true
 
 $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(BUILD_DIR)
-	wget $(KERNEL_URL) -P $(BUILD_DIR)
+	wget $(KERNEL_URL) -N -P $(BUILD_DIR)
 
 $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz
 	tar -xf $^ -C $(BUILD_DIR)
@@ -37,7 +37,7 @@ $(BUILD_DIR)/include: $(DIST_DIR)/bzImage kernel_headers.patch
 	patch -p0 -d $(BUILD_DIR) -N < kernel_headers.patch; true
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(BUILD_DIR)
-	wget $(BUSYBOX_URL) -P $(BUILD_DIR)
+	wget $(BUSYBOX_URL) -N -P $(BUILD_DIR)
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
@@ -48,7 +48,7 @@ $(BUILD_DIR)/busybox: $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) busybox.config $(B
 	cp $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
 
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(BUILD_DIR)
-	wget $(DROPBEAR_URL) -P $(BUILD_DIR)
+	wget $(DROPBEAR_URL) -N -P $(BUILD_DIR)
 
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
