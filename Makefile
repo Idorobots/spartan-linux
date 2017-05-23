@@ -53,12 +53,12 @@ $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(BUILD_DIR)
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/dropbear: $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) $(BUILD_DIR)/include
+$(BUILD_DIR)/dropbearmulti: $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) $(BUILD_DIR)/include
 	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib CC=musl-gcc CFLAGS="-I $(ABS_BUILD_DIR)/include")
-	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) STATIC=1
-	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/{dropbear,dbclient,dropbearkey,dropbearconvert} $(BUILD_DIR)
+	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) STATIC=1 MULTI=1
+	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/dropbearmulti $(BUILD_DIR)
 
-$(DIST_DIR)/fs: $(DIST_DIR) rootfs $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbear
+$(DIST_DIR)/fs: $(DIST_DIR) rootfs $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti
 	mkdir $(DIST_DIR)/fs; true
 	mkdir -p $(DIST_DIR)/fs/{bin,boot,dev,etc,home,lib,mnt,opt,proc,run,sbin,srv,sys}
 	mkdir -p $(DIST_DIR)/fs/usr/{bin,sbin,include,lib,share,src}
@@ -68,7 +68,8 @@ $(DIST_DIR)/fs: $(DIST_DIR) rootfs $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbear
 	cp -r rootfs/* $(DIST_DIR)/fs/
 	cp $(BUILD_DIR)/busybox $(DIST_DIR)/fs/bin/
 	for util in $$($(DIST_DIR)/fs/bin/busybox --list-full); do ln -s /bin/busybox $(DIST_DIR)/fs/$$util; done
-	cp $(BUILD_DIR)/{dropbear,dbclient,dropbearkey,dropbearconvert} $(DIST_DIR)/fs/bin/
+	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
+	for util in dropbear dbclient dropbearkey dropbearconvert; do ln -s /bin/dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
 
 clean:
 	rm -rf build; true
