@@ -1,5 +1,6 @@
 KERNEL_VERSION=4.11.2
 KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).tar.xz
+PATCH_HEADERS=false
 
 BUSYBOX_VERSION=1.26.2
 BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
@@ -35,7 +36,10 @@ $(DIST_DIR)/bzImage: $(BUILD_DIR)/linux-$(KERNEL_VERSION) kernel.config $(DIST_D
 
 $(BUILD_DIR)/include: $(DIST_DIR)/bzImage kernel_headers.patch
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH=$(ABS_BUILD_DIR)
+
+ifeq ($(PATCH_HEADERS), true)
 	patch -p0 -d $(BUILD_DIR) -N < kernel_headers.patch; true
+endif
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(BUILD_DIR)
 	wget $(BUSYBOX_URL) -N -P $(BUILD_DIR)
