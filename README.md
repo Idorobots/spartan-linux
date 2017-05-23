@@ -31,7 +31,7 @@ $ mkdir /path/to/mnt/rootfs.img
 # cp -r /path/to/dist/fs/* /path/to/mnt/rootfs.img
 # sync
 # umount /path/to/mnt/rootfs.img
-# losetup -d "${LOOPBACK}"
+# losetup -d "$LOOPBACK"
 ```
 
 ## Testing
