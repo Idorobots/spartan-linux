@@ -7,7 +7,6 @@ A Linux kernel with statically-compiled Busybox & Dropbear userspace. Based on [
 You'll need:
 
 - *nix environment (make, wget, tar, patch, etc)
-- [musl](https://www.musl-libc.org/)
 - [SYSLINUX](http://www.syslinux.org)
 
 ### Kernel & Userspace
