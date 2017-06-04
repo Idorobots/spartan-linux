@@ -51,7 +51,7 @@ $(BUILD_DIR)/musl-$(MUSL_VERSION): $(BUILD_DIR)/musl-$(MUSL_VERSION).tar.gz
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(BUILD_DIR)/musl: $(BUILD_DIR)/musl-$(MUSL_VERSION) $(BUILD_DIR)/include
-	(cd $(BUILD_DIR)/musl-$(MUSL_VERSION) ; ./configure --prefix="$(ABS_BUILD_DIR)/musl" --syslibdir="$(ABS_BUILD_DIR)/musl" CFLAGS="-I $(ABS_BUILD_DIR)/include")
+	(cd $(BUILD_DIR)/musl-$(MUSL_VERSION) ; ./configure --prefix="$(ABS_BUILD_DIR)/musl" --syslibdir="$(ABS_BUILD_DIR)/musl" --enable-wrapper=gcc CFLAGS="-I $(ABS_BUILD_DIR)/include")
 	$(MAKE) -C $(BUILD_DIR)/musl-$(MUSL_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/musl-$(MUSL_VERSION) install
 
