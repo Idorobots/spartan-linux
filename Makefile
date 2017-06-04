@@ -2,6 +2,9 @@ KERNEL_VERSION=4.11.2
 KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).tar.xz
 PATCH_HEADERS=false
 
+MUSL_VERSION=1.1.15
+MUSL_URL=https://www.musl-libc.org/releases/musl-$(MUSL_VERSION).tar.gz
+
 BUSYBOX_VERSION=1.26.2
 BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
 
@@ -41,15 +44,26 @@ ifeq ($(PATCH_HEADERS), true)
 	patch -p0 -d $(BUILD_DIR) -N < kernel_headers.patch; true
 endif
 
+$(BUILD_DIR)/musl-$(MUSL_VERSION).tar.gz: $(BUILD_DIR)
+	wget $(MUSL_URL) -N -P $(BUILD_DIR)
+
+$(BUILD_DIR)/musl-$(MUSL_VERSION): $(BUILD_DIR)/musl-$(MUSL_VERSION).tar.gz
+	tar -xf $^ -C $(BUILD_DIR)
+
+$(BUILD_DIR)/musl: $(BUILD_DIR)/musl-$(MUSL_VERSION) $(BUILD_DIR)/include
+	(cd $(BUILD_DIR)/musl-$(MUSL_VERSION) ; ./configure --prefix="$(ABS_BUILD_DIR)/musl" CFLAGS="-I $(ABS_BUILD_DIR)/include")
+	$(MAKE) -C $(BUILD_DIR)/musl-$(MUSL_VERSION)
+	$(MAKE) -C $(BUILD_DIR)/musl-$(MUSL_VERSION) install
+
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(BUILD_DIR)
 	wget $(BUSYBOX_URL) -N -P $(BUILD_DIR)
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/busybox: $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) busybox.config $(BUILD_DIR)/include
+$(BUILD_DIR)/busybox: $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) busybox.config $(BUILD_DIR)/include $(BUILD_DIR)/musl
 	cp busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
-	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) CC=musl-gcc CONFIG_EXTRA_CFLAGS="-I $(ABS_BUILD_DIR)/include"
+	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) CC="$(ABS_BUILD_DIR)/musl/bin/musl-gcc" CONFIG_EXTRA_CFLAGS="-I $(ABS_BUILD_DIR)/include"
 	cp $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
 
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(BUILD_DIR)
@@ -58,8 +72,8 @@ $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(BUILD_DIR)
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/dropbearmulti: $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) $(BUILD_DIR)/include
-	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib CC=musl-gcc CFLAGS="-I $(ABS_BUILD_DIR)/include")
+$(BUILD_DIR)/dropbearmulti: $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) $(BUILD_DIR)/include $(BUILD_DIR)/musl
+	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib CC="$(ABS_BUILD_DIR)/musl/bin/musl-gcc" CFLAGS="-I $(ABS_BUILD_DIR)/include")
 	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) MULTI=1 STATIC=1 PROGRAMS="$(DROPBEAR_PROGRAMS)"
 	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) strip MULTI=1
 	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/dropbearmulti $(BUILD_DIR)
