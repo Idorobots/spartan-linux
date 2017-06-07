@@ -1,3 +1,6 @@
+CTNG_VERSION=1.23.0
+CTNG_URL=http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-$(CTNG_VERSION).tar.xz
+
 KERNEL_VERSION=4.11.2
 KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).tar.xz
 PATCH_HEADERS=false
@@ -25,6 +28,17 @@ $(BUILD_DIR):
 
 $(DIST_DIR):
 	mkdir $(DIST_DIR); true
+
+$(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION).tar.xz: $(BUILD_DIR)
+	wget $(CTNG_URL) -N -P $(BUILD_DIR)
+
+$(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION).tar.xz
+	tar -xf $^ -C $(BUILD_DIR)
+
+$(BUILD_DIR)/ct-ng: $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
+	(cd $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) ; ./configure --prefix="$(ABS_BUILD_DIR)/ct-ng")
+	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
+	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) install
 
 $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(BUILD_DIR)
 	wget $(KERNEL_URL) -N -P $(BUILD_DIR)
