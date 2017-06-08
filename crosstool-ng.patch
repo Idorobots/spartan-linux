@@ -1,0 +1,16 @@
+diff -Naur Makefile Makefile.patched
+--- Makefile	2017-06-08 19:29:49.230639210 +0200
++++ Makefile.patched	2017-06-08 19:29:51.477328324 +0200
+@@ -122,9 +122,9 @@
+ # level.
+ # This has the side effect of only showing the real targets, and hiding our
+ # internal ones. :-)
+-ifneq ($(MAKELEVEL),0)
+-$(error Recursion detected, bailing out...)
+-endif
++#ifneq ($(MAKELEVEL),0)
++#$(error Recursion detected, bailing out...)
++#endif
+ 
+ MAKEFLAGS += $(CT_MAKEFLAGS)
+ build install clean distclean mrproper uninstall:
