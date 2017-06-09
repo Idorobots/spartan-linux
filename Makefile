@@ -41,6 +41,11 @@ ifeq ($(PATCH_CTNG), true)
 endif
 
 $(BUILD_DIR)/ct-ng: $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
+
+ifeq ($(PATCH_CTNG), true)
+	if ! [ -z $${LIBRARY_PATH+dummy} ]; then echo "LIBRARY_PATH is set; crosstool-ng build won't work."; false; fi
+	if ! [ -z $${LD_LIBRARY_PATH+dummy} ]; then echo "LD_LIBRARY_PATH is set; crosstool-ng build won't work."; false; fi
+endif
 	(cd $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) ; ./bootstrap)
 	(cd $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) ; ./configure --prefix="$(ABS_BUILD_DIR)/ct-ng")
 
