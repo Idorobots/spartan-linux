@@ -20,6 +20,8 @@ BUILD_DIR=build
 ABS_BUILD_DIR=$(shell pwd)/$(BUILD_DIR)
 DIST_DIR=dist
 
+CTNG=$(ABS_BUILD_DIR)/ct-ng/bin/ct-ng
+
 VPATH=$(BUILD_DIR)
 
 all: $(DIST_DIR)/bzImage $(DIST_DIR)/fs
@@ -56,6 +58,12 @@ endif
 
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) install
+
+$(BUILD_DIR)/toolchain: $(BUILD_DIR)/ct-ng crosstool-ng.config $(BUILD_DIR)
+	cp crosstool-ng.config $(BUILD_DIR)/ct-ng/.config
+	sed -i -r "s:(CT_LOCAL_TARBALLS_DIR).+:\1=$(ABS_BUILD_DIR):" $(BUILD_DIR)/ct-ng/.config
+	sed -i -r "s:(CT_PREFIX_DIR).+:\1=$(ABS_BUILD_DIR)/toolchain:" $(BUILD_DIR)/ct-ng/.config
+	(cd $(BUILD_DIR)/ct-ng ; $(CTNG) build)
 
 $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(BUILD_DIR)
 	wget $(KERNEL_URL) -N -P $(BUILD_DIR)
