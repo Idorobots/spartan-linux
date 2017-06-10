@@ -2,11 +2,11 @@ CTNG_VERSION=1.23.0
 CTNG_URL=https://github.com/crosstool-ng/crosstool-ng/archive/crosstool-ng-$(CTNG_VERSION).tar.gz
 PATCH_CTNG=true
 
-KERNEL_VERSION=4.11.2
+KERNEL_VERSION=4.11.3
 KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).tar.xz
 PATCH_HEADERS=false
 
-MUSL_VERSION=1.1.15
+MUSL_VERSION=1.1.16
 MUSL_URL=https://www.musl-libc.org/releases/musl-$(MUSL_VERSION).tar.gz
 
 BUSYBOX_VERSION=1.26.2
