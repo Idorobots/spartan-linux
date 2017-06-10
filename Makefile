@@ -37,6 +37,7 @@ $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(BUILD_DIR)/crosstool-ng-$(CTNG_VERS
 	tar -xf $^ -C $(BUILD_DIR)
 
 ifeq ($(PATCH_CTNG), true)
+	- rm -rf $@
 	mv $(BUILD_DIR)/crosstool-ng-crosstool-ng-$(CTNG_VERSION) $@
 endif
 
