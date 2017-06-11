@@ -21,6 +21,8 @@ ABS_BUILD_DIR=$(shell pwd)/$(BUILD_DIR)
 DIST_DIR=dist
 
 CTNG=$(ABS_BUILD_DIR)/ct-ng/bin/ct-ng
+ARCH=x86_64
+CC_PREFIX=$(ABS_BUILD_DIR)/toolchain/bin/x86_64-unknown-linux-musl-
 
 VPATH=$(BUILD_DIR)
 
@@ -71,28 +73,10 @@ $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(BUILD_DIR)
 $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(DIST_DIR)/bzImage: $(BUILD_DIR)/linux-$(KERNEL_VERSION) kernel.config $(DIST_DIR)
+$(DIST_DIR)/bzImage: $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(BUILD_DIR)/toolchain kernel.config $(DIST_DIR)
 	cp kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(CC_PREFIX)"
 	cp $(BUILD_DIR)/linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $(DIST_DIR)
-
-$(BUILD_DIR)/include: $(DIST_DIR)/bzImage kernel_headers.patch
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH=$(ABS_BUILD_DIR)
-
-ifeq ($(PATCH_HEADERS), true)
-	patch -p0 -d $(BUILD_DIR) -N < kernel_headers.patch; true
-endif
-
-$(BUILD_DIR)/musl-$(MUSL_VERSION).tar.gz: $(BUILD_DIR)
-	wget $(MUSL_URL) -N -P $(BUILD_DIR)
-
-$(BUILD_DIR)/musl-$(MUSL_VERSION): $(BUILD_DIR)/musl-$(MUSL_VERSION).tar.gz
-	tar -xf $^ -C $(BUILD_DIR)
-
-$(BUILD_DIR)/musl: $(BUILD_DIR)/musl-$(MUSL_VERSION) $(BUILD_DIR)/include
-	(cd $(BUILD_DIR)/musl-$(MUSL_VERSION) ; ./configure --prefix="$(ABS_BUILD_DIR)/musl" --syslibdir="$(ABS_BUILD_DIR)/musl" --enable-wrapper=gcc CFLAGS="-I $(ABS_BUILD_DIR)/include")
-	$(MAKE) -C $(BUILD_DIR)/musl-$(MUSL_VERSION)
-	$(MAKE) -C $(BUILD_DIR)/musl-$(MUSL_VERSION) install
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(BUILD_DIR)
 	wget $(BUSYBOX_URL) -N -P $(BUILD_DIR)
@@ -100,9 +84,9 @@ $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(BUILD_DIR)
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/busybox: $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) busybox.config $(BUILD_DIR)/include $(BUILD_DIR)/musl
+$(BUILD_DIR)/busybox: $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(BUILD_DIR)/toolchain busybox.config
 	cp busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
-	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) CC="$(ABS_BUILD_DIR)/musl/bin/musl-gcc" CONFIG_EXTRA_CFLAGS="-I $(ABS_BUILD_DIR)/include"
+	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) CC="$(CC_PREFIX)gcc"
 	cp $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
 
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(BUILD_DIR)
@@ -111,8 +95,8 @@ $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(BUILD_DIR)
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/dropbearmulti: $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) $(BUILD_DIR)/include $(BUILD_DIR)/musl
-	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib CC="$(ABS_BUILD_DIR)/musl/bin/musl-gcc" CFLAGS="-I $(ABS_BUILD_DIR)/include")
+$(BUILD_DIR)/dropbearmulti: $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) $(BUILD_DIR)/toolchain
+	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib CC="$(CC_PREFIX)gcc")
 	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) MULTI=1 STATIC=1 PROGRAMS="$(DROPBEAR_PROGRAMS)"
 	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) strip MULTI=1
 	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/dropbearmulti $(BUILD_DIR)
