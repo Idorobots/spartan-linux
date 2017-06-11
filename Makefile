@@ -33,15 +33,12 @@ TOOLCHAIN_CC_PREFIX=$(TOOLCHAIN_CC_DIR)/$(HOST)-
 
 VPATH=$(BUILD_DIR)
 
-all: $(DIST_DIR)/bzImage $(DIST_DIR)/fs
+all: $(DIST_DIR)
 
 $(BUILD_DIR):
 	mkdir $@; true
 
 $(TOOLCHAIN_DIR): $(BUILD_DIR)
-	mkdir $@; true
-
-$(DIST_DIR):
 	mkdir $@; true
 
 $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION).tar.gz: $(BUILD_DIR)
@@ -83,10 +80,10 @@ $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(BUILD_DIR)
 $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(DIST_DIR)/bzImage: $(DIST_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) kernel.config
+$(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) kernel.config
 	cp kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
-	cp $(BUILD_DIR)/linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $(DIST_DIR)
+	cp $(BUILD_DIR)/linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $@
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(BUILD_DIR)
 	wget $(BUSYBOX_URL) -N -P $(BUILD_DIR)
@@ -111,8 +108,9 @@ $(BUILD_DIR)/dropbearmulti: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/dropbear-$(DROPBEAR
 	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) strip MULTI=1
 	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/dropbearmulti $(BUILD_DIR)
 
-$(DIST_DIR)/fs: $(DIST_DIR) $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti rootfs
-	mkdir $(DIST_DIR)/fs; true
+$(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti rootfs
+	mkdir -p $(DIST_DIR)/fs
+	cp $(BUILD_DIR)/kernel $(DIST_DIR)
 	mkdir -p $(DIST_DIR)/fs/{bin,boot,dev,etc,home,lib,mnt,opt,proc,run,sbin,srv,sys}
 	mkdir -p $(DIST_DIR)/fs/usr/{bin,sbin,include,lib,share,src}
 	mkdir -p $(DIST_DIR)/fs/var/{lib,lock,log,run,spool}
@@ -125,7 +123,7 @@ $(DIST_DIR)/fs: $(DIST_DIR) $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti root
 	for util in $(DROPBEAR_PROGRAMS); do ln -s /bin/dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
 
 clean:
-	rm -rf build; true
-	rm -rf dist; true
+	rm -rf $(BUILD_DIR); true
+	rm -rf $(DIST_DIR); true
 
 .PHONY: clean
