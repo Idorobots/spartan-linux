@@ -1,5 +1,6 @@
-CTNG_VERSION=1.23.0
-CTNG_URL=https://github.com/crosstool-ng/crosstool-ng/archive/crosstool-ng-$(CTNG_VERSION).tar.gz
+# CTNG_VERSION=crosstool-ng-1.24.0
+CTNG_VERSION=a9f8a8e67509547a53b9b4781734e2b482b75b4e
+CTNG_URL=https://github.com/crosstool-ng/crosstool-ng/archive/$(CTNG_VERSION).tar.gz
 PATCH_CTNG=true
 
 KERNEL_VERSION=4.11.3
@@ -40,16 +41,11 @@ $(TARBALLS_DIR):
 $(TOOLCHAIN_DIR): $(BUILD_DIR)
 	mkdir -p $@
 
-$(TARBALLS_DIR)/crosstool-ng-$(CTNG_VERSION).tar.gz: $(TARBALLS_DIR)
+$(TARBALLS_DIR)/$(CTNG_VERSION).tar.gz: $(TARBALLS_DIR)
 	wget $(CTNG_URL) -N -P $(BUILD_DIR)
 
-$(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(TARBALLS_DIR)/crosstool-ng-$(CTNG_VERSION).tar.gz
+$(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(TARBALLS_DIR)/$(CTNG_VERSION).tar.gz
 	tar -xf $^ -C $(BUILD_DIR)
-
-ifeq ($(PATCH_CTNG), true)
-	- rm -rf $@
-	mv $(BUILD_DIR)/crosstool-ng-crosstool-ng-$(CTNG_VERSION) $@
-endif
 
 $(CTNG): $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
 
