@@ -4,10 +4,6 @@ PATCH_CTNG=true
 
 KERNEL_VERSION=4.11.3
 KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).tar.xz
-PATCH_HEADERS=false
-
-MUSL_VERSION=1.1.16
-MUSL_URL=https://www.musl-libc.org/releases/musl-$(MUSL_VERSION).tar.gz
 
 BUSYBOX_VERSION=1.26.2
 BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
@@ -36,15 +32,18 @@ VPATH=$(BUILD_DIR)
 all: $(DIST_DIR)
 
 $(BUILD_DIR):
-	mkdir $@; true
+	mkdir -p $@
+
+$(TARBALLS_DIR):
+	mkdir -p $@
 
 $(TOOLCHAIN_DIR): $(BUILD_DIR)
-	mkdir $@; true
+	mkdir -p $@
 
-$(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION).tar.gz: $(BUILD_DIR)
+$(TARBALLS_DIR)/crosstool-ng-$(CTNG_VERSION).tar.gz: $(TARBALLS_DIR)
 	wget $(CTNG_URL) -N -P $(BUILD_DIR)
 
-$(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION).tar.gz
+$(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(TARBALLS_DIR)/crosstool-ng-$(CTNG_VERSION).tar.gz
 	tar -xf $^ -C $(BUILD_DIR)
 
 ifeq ($(PATCH_CTNG), true)
@@ -74,10 +73,10 @@ $(TOOLCHAIN_CC_DIR): $(BUILD_DIR) $(CTNG) crosstool-ng.config
 	sed -i -r "s:(CT_PREFIX_DIR).+:\1=$(TOOLCHAIN_DIR):" $(BUILD_DIR)/.config
 	(cd $(BUILD_DIR) ; $(CTNG) build)
 
-$(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(BUILD_DIR)
+$(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(TARBALLS_DIR)
 	wget $(KERNEL_URL) -N -P $(BUILD_DIR)
 
-$(BUILD_DIR)/linux-$(KERNEL_VERSION): $(BUILD_DIR)/linux-$(KERNEL_VERSION).tar.xz
+$(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) kernel.config
@@ -85,10 +84,10 @@ $(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNE
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
 	cp $(BUILD_DIR)/linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $@
 
-$(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(BUILD_DIR)
+$(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(BUSYBOX_URL) -N -P $(BUILD_DIR)
 
-$(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
+$(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) busybox.config
@@ -96,10 +95,10 @@ $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
 	cp $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
 
-$(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(BUILD_DIR)
+$(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(DROPBEAR_URL) -N -P $(BUILD_DIR)
 
-$(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
+$(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(BUILD_DIR)/dropbearmulti: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)
