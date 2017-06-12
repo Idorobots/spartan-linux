@@ -7,6 +7,7 @@ A Linux kernel with statically-compiled Busybox & Dropbear userspace. Based on [
 You'll need:
 
 - *nix environment (make, wget, tar, patch, etc)
+- gperf, help2man & other [crosstool-ng](http://crosstool-ng.github.io/) dependencies
 - [SYSLINUX](http://www.syslinux.org)
 
 ### Kernel & Userspace
