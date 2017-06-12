@@ -14,13 +14,13 @@ DROPBEAR_URL=https://matt.ucc.asn.au/dropbear/dropbear-$(DROPBEAR_VERSION).tar.b
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 
 TARGET=generic-x86_64
-ARCH=x86_64
-HOST=x86_64-unknown-linux-musl
 
 TARBALLS_DIR=cache
 TARGET_DIR=targets/$(TARGET)
 BUILD_DIR=build/$(TARGET)
 DIST_DIR=dist/$(TARGET)
+
+include $(TARGET_DIR)/config.mk
 
 ABS_BUILD_DIR=$(shell pwd)/$(BUILD_DIR)
 
