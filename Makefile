@@ -15,19 +15,17 @@ DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 
 TARGET=generic-x86_64
 
-TARBALLS_DIR=cache
-TARGET_DIR=targets/$(TARGET)
-BUILD_DIR=build/$(TARGET)
-DIST_DIR=dist/$(TARGET)
+TARBALLS_DIR=$(shell pwd)/cache
+TARGET_DIR=$(shell pwd)/targets/$(TARGET)
+BUILD_DIR=$(shell pwd)/build/$(TARGET)
+DIST_DIR=$(shell pwd)/dist/$(TARGET)
 
 include $(TARGET_DIR)/config.mk
 
-ABS_BUILD_DIR=$(shell pwd)/$(BUILD_DIR)
-
-CTNG_DIR=$(ABS_BUILD_DIR)/ct-ng
+CTNG_DIR=$(BUILD_DIR)/ct-ng
 CTNG=$(CTNG_DIR)/bin/ct-ng
 
-TOOLCHAIN_DIR=$(ABS_BUILD_DIR)/toolchain
+TOOLCHAIN_DIR=$(BUILD_DIR)/toolchain
 TOOLCHAIN_CC_DIR=$(TOOLCHAIN_DIR)/bin
 TOOLCHAIN_CC_PREFIX=$(TOOLCHAIN_CC_DIR)/$(HOST)-
 
@@ -45,7 +43,7 @@ $(TOOLCHAIN_DIR): $(BUILD_DIR)
 	mkdir -p $@
 
 $(TARBALLS_DIR)/$(CTNG_VERSION).tar.gz: $(TARBALLS_DIR)
-	wget $(CTNG_URL) -N -P $(BUILD_DIR)
+	wget $(CTNG_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(TARBALLS_DIR)/$(CTNG_VERSION).tar.gz
 	tar -xf $^ -C $(BUILD_DIR)
@@ -66,14 +64,14 @@ endif
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) install
 
-$(TOOLCHAIN_CC_DIR): $(BUILD_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
+$(TOOLCHAIN_CC_DIR): $(BUILD_DIR) $(TARBALLS_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
 	cp $(TARGET_DIR)/crosstool-ng.config $(BUILD_DIR)/.config
 	sed -i -r "s:(CT_LOCAL_TARBALLS_DIR).+:\1=$(TARBALLS_DIR):" $(BUILD_DIR)/.config
 	sed -i -r "s:(CT_PREFIX_DIR).+:\1=$(TOOLCHAIN_DIR):" $(BUILD_DIR)/.config
 	(cd $(BUILD_DIR) ; $(CTNG) build)
 
 $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(TARBALLS_DIR)
-	wget $(KERNEL_URL) -N -P $(BUILD_DIR)
+	wget $(KERNEL_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz
 	tar -xf $^ -C $(BUILD_DIR)
@@ -84,7 +82,7 @@ $(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNE
 	cp $(BUILD_DIR)/linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $@
 
 $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
-	wget $(BUSYBOX_URL) -N -P $(BUILD_DIR)
+	wget $(BUSYBOX_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
@@ -95,7 +93,7 @@ $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION
 	cp $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
 
 $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(TARBALLS_DIR)
-	wget $(DROPBEAR_URL) -N -P $(BUILD_DIR)
+	wget $(DROPBEAR_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
