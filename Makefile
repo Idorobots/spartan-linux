@@ -13,16 +13,19 @@ DROPBEAR_VERSION=2017.75
 DROPBEAR_URL=https://matt.ucc.asn.au/dropbear/dropbear-$(DROPBEAR_VERSION).tar.bz2
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 
-BUILD_DIR=build
-DIST_DIR=dist
+TARGET=generic-x86_64
+ARCH=x86_64
+HOST=x86_64-unknown-linux-musl
+
+TARBALLS_DIR=cache
+TARGET_DIR=targets/$(TARGET)
+BUILD_DIR=build/$(TARGET)
+DIST_DIR=dist/$(TARGET)
+
 ABS_BUILD_DIR=$(shell pwd)/$(BUILD_DIR)
-TARBALLS_DIR=$(ABS_BUILD_DIR)
 
 CTNG_DIR=$(ABS_BUILD_DIR)/ct-ng
 CTNG=$(CTNG_DIR)/bin/ct-ng
-
-ARCH=x86_64
-HOST=x86_64-unknown-linux-musl
 
 TOOLCHAIN_DIR=$(ABS_BUILD_DIR)/toolchain
 TOOLCHAIN_CC_DIR=$(TOOLCHAIN_DIR)/bin
@@ -63,8 +66,8 @@ endif
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) install
 
-$(TOOLCHAIN_CC_DIR): $(BUILD_DIR) $(CTNG) crosstool-ng.config
-	cp crosstool-ng.config $(BUILD_DIR)/.config
+$(TOOLCHAIN_CC_DIR): $(BUILD_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
+	cp $(TARGET_DIR)/crosstool-ng.config $(BUILD_DIR)/.config
 	sed -i -r "s:(CT_LOCAL_TARBALLS_DIR).+:\1=$(TARBALLS_DIR):" $(BUILD_DIR)/.config
 	sed -i -r "s:(CT_PREFIX_DIR).+:\1=$(TOOLCHAIN_DIR):" $(BUILD_DIR)/.config
 	(cd $(BUILD_DIR) ; $(CTNG) build)
@@ -75,8 +78,8 @@ $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(TARBALLS_DIR)
 $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) kernel.config
-	cp kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
+$(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
+	cp $(TARGET_DIR)/kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
 	cp $(BUILD_DIR)/linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $@
 
@@ -86,8 +89,8 @@ $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) busybox.config
-	cp busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
+$(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(TARGET_DIR)/busybox.config
+	cp $(TARGET_DIR)/busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
 	cp $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
 
