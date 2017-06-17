@@ -2,7 +2,7 @@
 
 A Linux kernel with statically-compiled Busybox & Dropbear userspace. Supported targets:
 
-- [x86_64-generic](targets/generic-x86_64)
+- [x86_64-generic](targets/x86_64-generic)
 
 Prerequisites:
 

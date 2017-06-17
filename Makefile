@@ -13,7 +13,7 @@ DROPBEAR_VERSION=2017.75
 DROPBEAR_URL=https://matt.ucc.asn.au/dropbear/dropbear-$(DROPBEAR_VERSION).tar.bz2
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 
-TARGET=generic-x86_64
+TARGET=x86_64-generic
 
 TARBALLS_DIR=$(shell pwd)/cache
 TARGET_DIR=$(shell pwd)/targets/$(TARGET)
