@@ -113,6 +113,7 @@ $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti
 	install -d -m 0750 $(DIST_DIR)/fs/root
 	install -d -m 1777 $(DIST_DIR)/fs/tmp
 	cp -r rootfs/* $(DIST_DIR)/fs/
+	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
 	cp $(BUILD_DIR)/busybox $(DIST_DIR)/fs/bin/
 	for util in $$($(DIST_DIR)/fs/bin/busybox --list-full); do ln -s /bin/busybox $(DIST_DIR)/fs/$$util; done
 	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
