@@ -116,7 +116,7 @@ $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
 	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
-	for util in $(DROPBEAR_PROGRAMS); do ln -s /bin/dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
+	for util in $(DROPBEAR_PROGRAMS); do ln -s dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
 
 clean:
 	rm -rf $(BUILD_DIR); true
