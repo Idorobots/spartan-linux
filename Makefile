@@ -90,7 +90,7 @@ $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSI
 $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(TARGET_DIR)/busybox.config
 	cp $(TARGET_DIR)/busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
-	cp $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
+	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) install CONFIG_PREFIX="$@" ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
 
 $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(DROPBEAR_URL) -N -P $(TARBALLS_DIR)
@@ -114,8 +114,7 @@ $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti
 	install -d -m 1777 $(DIST_DIR)/fs/tmp
 	cp -r rootfs/* $(DIST_DIR)/fs/
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
-	cp $(BUILD_DIR)/busybox $(DIST_DIR)/fs/bin/
-	for util in $$($(DIST_DIR)/fs/bin/busybox --list-full); do ln -s /bin/busybox $(DIST_DIR)/fs/$$util; done
+	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
 	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
 	for util in $(DROPBEAR_PROGRAMS); do ln -s /bin/dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
 
