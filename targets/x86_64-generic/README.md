@@ -24,11 +24,10 @@ $ mkdir mnt
 
 ## Bootloader & bootable file system image
 
-This repository includes a simple EXTLINUX config file that will boot a Linux kernel supplied in `/boot` directory of the root filesystem. To use it: re-mount the image, install the kernel image and EXTLINUX bootloader. Afterwards, mark the only partition as **bootable** and install the boot code:
+This repository includes a simple EXTLINUX config file that will boot a Linux kernel supplied in `/boot` directory of the root filesystem. To use it: re-mount the image and install EXTLINUX bootloader. Afterwards, mark the only partition as **bootable** and install the boot code:
 
 ```
 $ cd /path/to/image
-# cp /path/to/dist/kernel mnt/boot
 # extlinux --install mnt/boot/syslinux/
 # dd bs=440 count=1 if=/usr/lib/syslinux/bios/mbr.bin of=$LOOPBACK
 $ echo -e 'a\nw\n' | fdisk rootfs.img

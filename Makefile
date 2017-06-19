@@ -79,7 +79,12 @@ $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).ta
 $(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
 	cp $(TARGET_DIR)/kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
-	cp $(BUILD_DIR)/linux-$(KERNEL_VERSION)/`$(MAKE) -s -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) image_name` $@
+	- mkdir $@
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(KERNEL_INSTALL_COMMAND) INSTALL_PATH=$@ ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH=$@/headers ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) modules_install INSTALL_MOD_PATH=$@/modules ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"; true
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) firmware_install INSTALL_FW_PATH=$@/firmware ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"; true
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) dtbs_install INSTALL_PATH=$@ ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"; true
 
 $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(BUSYBOX_URL) -N -P $(TARBALLS_DIR)
@@ -106,7 +111,6 @@ $(BUILD_DIR)/dropbearmulti: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/dropbear-$(DROPBEAR
 
 $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti rootfs
 	mkdir -p $(DIST_DIR)/fs
-	cp $(BUILD_DIR)/kernel $(DIST_DIR)
 	mkdir -p $(DIST_DIR)/fs/{bin,boot,dev,etc,home,lib,mnt,opt,proc,run,sbin,srv,sys}
 	mkdir -p $(DIST_DIR)/fs/usr/{bin,sbin,include,lib,share,src}
 	mkdir -p $(DIST_DIR)/fs/var/{lib,lock,log,run,spool}
@@ -117,6 +121,8 @@ $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti
 	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
 	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
 	for util in $(DROPBEAR_PROGRAMS); do ln -s dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
+	cp $(BUILD_DIR)/kernel/vmlinuz* $(DIST_DIR)/fs/boot/vmlinuz-$(KERNEL_VERSION)
+	ln -s vmlinuz-$(KERNEL_VERSION) $(DIST_DIR)/fs/boot/vmlinuz
 
 clean:
 	rm -rf $(BUILD_DIR); true
