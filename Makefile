@@ -13,7 +13,7 @@ DROPBEAR_VERSION=2017.75
 DROPBEAR_URL=https://matt.ucc.asn.au/dropbear/dropbear-$(DROPBEAR_VERSION).tar.bz2
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 
-TARGET=generic-x86_64
+TARGET=x86_64-generic
 
 TARBALLS_DIR=$(shell pwd)/cache
 TARGET_DIR=$(shell pwd)/targets/$(TARGET)
@@ -79,7 +79,12 @@ $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).ta
 $(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
 	cp $(TARGET_DIR)/kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
-	cp $(BUILD_DIR)/linux-$(KERNEL_VERSION)/arch/x86/boot/bzImage $@
+	- mkdir $@
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(KERNEL_INSTALL_COMMAND) INSTALL_PATH=$@ ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH=$@/headers ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) modules_install INSTALL_MOD_PATH=$@/modules ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"; true
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) firmware_install INSTALL_FW_PATH=$@/firmware ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"; true
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) dtbs_install INSTALL_PATH=$@ ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"; true
 
 $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(BUSYBOX_URL) -N -P $(TARBALLS_DIR)
@@ -90,7 +95,7 @@ $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSI
 $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(TARGET_DIR)/busybox.config
 	cp $(TARGET_DIR)/busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
-	cp $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/busybox $(BUILD_DIR)
+	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) install CONFIG_PREFIX="$@" ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
 
 $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(DROPBEAR_URL) -N -P $(TARBALLS_DIR)
@@ -106,17 +111,18 @@ $(BUILD_DIR)/dropbearmulti: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/dropbear-$(DROPBEAR
 
 $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti rootfs
 	mkdir -p $(DIST_DIR)/fs
-	cp $(BUILD_DIR)/kernel $(DIST_DIR)
 	mkdir -p $(DIST_DIR)/fs/{bin,boot,dev,etc,home,lib,mnt,opt,proc,run,sbin,srv,sys}
 	mkdir -p $(DIST_DIR)/fs/usr/{bin,sbin,include,lib,share,src}
 	mkdir -p $(DIST_DIR)/fs/var/{lib,lock,log,run,spool}
 	install -d -m 0750 $(DIST_DIR)/fs/root
 	install -d -m 1777 $(DIST_DIR)/fs/tmp
 	cp -r rootfs/* $(DIST_DIR)/fs/
-	cp $(BUILD_DIR)/busybox $(DIST_DIR)/fs/bin/
-	for util in $$($(DIST_DIR)/fs/bin/busybox --list-full); do ln -s /bin/busybox $(DIST_DIR)/fs/$$util; done
+	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
+	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
 	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
-	for util in $(DROPBEAR_PROGRAMS); do ln -s /bin/dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
+	for util in $(DROPBEAR_PROGRAMS); do ln -s dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
+	cp $(BUILD_DIR)/kernel/vmlinuz* $(DIST_DIR)/fs/boot/vmlinuz-$(KERNEL_VERSION)
+	ln -s vmlinuz-$(KERNEL_VERSION) $(DIST_DIR)/fs/boot/vmlinuz
 
 clean:
 	rm -rf $(BUILD_DIR); true
