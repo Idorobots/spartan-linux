@@ -1,6 +1,6 @@
-# Generic 64-bit x86 Spartan Linux
+# Generic 32-bit x86 Spartan Linux
 
-You'll need:
+For maximal compatibility the architecture level has been set to i486. Extra prerequisites:
 
 - [SYSLINUX](http://www.syslinux.org)
 
@@ -38,5 +38,5 @@ $ echo -e 'a\nw\n' | fdisk rootfs.img
 The kernel image & root filesystem image can be run directly using QEMU:
 
 ```
-$ qemu-system-x86_64 /path/to/image/rootfs.img
+$ qemu-system-i386 /path/to/image/rootfs.img
 ```
