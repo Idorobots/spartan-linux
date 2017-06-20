@@ -3,6 +3,7 @@
 A Linux kernel with statically-compiled Busybox & Dropbear userspace. Supported targets:
 
 - [x86_64-generic](targets/x86_64-generic)
+- [i386-generic](targets/i386-generic)
 
 Prerequisites:
 
@@ -13,7 +14,7 @@ Prerequisites:
 Building:
 
 ```
-$ make -j8
+$ make -j8 TARGET=x86_64-generic
 ```
 
 See target-specific README for extra assembly instructions.
