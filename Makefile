@@ -83,7 +83,6 @@ $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).ta
 $(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
 	cp $(TARGET_DIR)/kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
-	mkdir $@; true
 	$(call install_kernel,$@,$(BUILD_DIR)/linux-$(KERNEL_VERSION))
 
 $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
