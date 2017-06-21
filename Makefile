@@ -37,22 +37,18 @@ VPATH=$(BUILD_DIR)
 
 all: $(DIST_DIR)
 
-$(BUILD_DIR):
-	mkdir -p $@
-
 $(TARBALLS_DIR):
-	mkdir -p $@
-
-$(TOOLCHAIN_DIR): $(BUILD_DIR)
 	mkdir -p $@
 
 $(TARBALLS_DIR)/$(CTNG_VERSION).tar.gz: $(TARBALLS_DIR)
 	wget $(CTNG_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(TARBALLS_DIR)/$(CTNG_VERSION).tar.gz
+	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(CTNG): $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
+	mkdir -p $(CTNG_DIR)
 
 ifeq ($(PATCH_CTNG), true)
 	if ! [ -z $${LIBRARY_PATH+dummy} ]; then echo "LIBRARY_PATH is set; crosstool-ng build won't work."; false; fi
@@ -64,11 +60,11 @@ endif
 ifeq ($(PATCH_CTNG), true)
 	patch -p0 -d $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) -N < crosstool-ng.patch; true
 endif
-
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) install
 
-$(TOOLCHAIN_CC_DIR): $(BUILD_DIR) $(TARBALLS_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
+$(TOOLCHAIN_CC_DIR): $(TARBALLS_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
+	mkdir -p $(TOOLCHAIN_DIR)
 	cp $(TARGET_DIR)/crosstool-ng.config $(BUILD_DIR)/.config
 	sed -i -r "s:(CT_LOCAL_TARBALLS_DIR).+:\1=$(TARBALLS_DIR):" $(BUILD_DIR)/.config
 	sed -i -r "s:(CT_PREFIX_DIR).+:\1=$(TOOLCHAIN_DIR):" $(BUILD_DIR)/.config
@@ -78,9 +74,10 @@ $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(TARBALLS_DIR)
 	wget $(KERNEL_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz
+	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
+$(BUILD_DIR)/kernel: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
 	cp $(TARGET_DIR)/kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
 	$(call install_kernel,$@,$(BUILD_DIR)/linux-$(KERNEL_VERSION))
@@ -89,6 +86,7 @@ $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(BUSYBOX_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
+	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(TARGET_DIR)/busybox.config
@@ -100,6 +98,7 @@ $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(DROPBEAR_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
+	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(BUILD_DIR)/dropbearmulti: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)
@@ -120,7 +119,7 @@ $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti
 	cp -r $(BUILD_DIR)/kernel/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
 	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
-	for util in $(DROPBEAR_PROGRAMS); do ln -s dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
+	for util in $(DROPBEAR_PROGRAMS); do ln -fs dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
 
 clean:
 	rm -rf $(BUILD_DIR); true
