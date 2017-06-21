@@ -118,11 +118,10 @@ $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti
 	install -d -m 1777 $(DIST_DIR)/fs/tmp
 	cp -r rootfs/* $(DIST_DIR)/fs/
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
+	cp -r $(BUILD_DIR)/kernel/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
 	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
 	for util in $(DROPBEAR_PROGRAMS); do ln -s dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
-	cp $(BUILD_DIR)/kernel/vmlinuz* $(DIST_DIR)/fs/boot/vmlinuz-$(KERNEL_VERSION)
-	ln -s vmlinuz-$(KERNEL_VERSION) $(DIST_DIR)/fs/boot/vmlinuz
 
 clean:
 	rm -rf $(BUILD_DIR); true
