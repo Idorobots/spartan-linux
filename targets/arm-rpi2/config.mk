@@ -1,6 +1,10 @@
 ARCH=arm
 HOST=arm-unknown-linux-musleabi
 
+FIRMWARE_BLOBS_VERSION=a878899b378a4421f009c49ddb33fc7206d540d1
+FIRMWARE_BLOBS_URL=https://github.com/raspberrypi/firmware/blob/$(FIRMWARE_BLOBS_VERSION)/boot
+FIRMWARE_BLOBS=bootcode.bin fixup.dat fixup_cd.dat fixup_db.dat fixup_x.dat start.elf start_cd.elf start_db.elf start_x.elf
+
 # $(1) - destination directory
 # $(2) - kernel directory
 define install_kernel =
@@ -8,5 +12,5 @@ define install_kernel =
 	$(MAKE) -C $(2) zinstall INSTALL_PATH=$(1)/boot
 	mv $(1)/boot/vmlinuz* $(1)/boot/kernel7.img
 	$(MAKE) -C $(2) dtbs_install INSTALL_DTBS_PATH=$(1)/boot
-	rm -f $(1)/boot/dtbs/*/bcm{2835,2708}*.dtb
+	for blob in $(FIRMWARE_BLOBS); do wget $(FIRMWARE_BLOBS_URL)/$$blob -N -P $(1)/boot; done
 endef
