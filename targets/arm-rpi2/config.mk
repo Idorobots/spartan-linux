@@ -11,6 +11,8 @@ define install_kernel =
 	mkdir -p $(1)/boot
 	$(MAKE) -C $(2) zinstall INSTALL_PATH=$(1)/boot
 	mv $(1)/boot/vmlinuz* $(1)/boot/kernel7.img
-	$(MAKE) -C $(2) dtbs_install INSTALL_DTBS_PATH=$(1)/boot
+#	$(MAKE) -C $(2) dtbs_install INSTALL_DTBS_PATH=$(1)/boot
+#	find $(1)/boot -type f -name *.dtb ! -name bcm2836-rpi-2-b.dtb -delete
+	cp $(2)/arch/arm/boot/dts/bcm2836-rpi-2-b.dtb $(1)/boot
 	for blob in $(FIRMWARE_BLOBS); do wget $(FIRMWARE_BLOBS_URL)/$$blob -N -P $(1)/boot; done
 endef
