@@ -4,7 +4,8 @@ CTNG_URL=https://github.com/crosstool-ng/crosstool-ng/archive/$(CTNG_VERSION).ta
 PATCH_CTNG=true
 
 KERNEL_VERSION=4.11.3
-KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).tar.xz
+KERNEL_EXTENSION=tar.xz
+KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION)
 
 BUSYBOX_VERSION=1.26.2
 BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
@@ -70,10 +71,10 @@ $(TOOLCHAIN_CC_DIR): $(TARBALLS_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
 	sed -i -r "s:(CT_PREFIX_DIR).+:\1=$(TOOLCHAIN_DIR):" $(BUILD_DIR)/.config
 	(cd $(BUILD_DIR) ; $(CTNG) build)
 
-$(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(TARBALLS_DIR)
+$(TARBALLS_DIR)/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION): $(TARBALLS_DIR)
 	wget $(KERNEL_URL) -N -P $(TARBALLS_DIR)
 
-$(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz
+$(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION)
 	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
