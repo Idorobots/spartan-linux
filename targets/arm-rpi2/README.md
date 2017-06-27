@@ -11,7 +11,7 @@ Create a suitable-sized file in `/path/to/image/rootfs.img`, mount it as a loopb
 ```
 $ cd /path/to/image
 $ fallocate -l64M rootfs.img
-$ echo -e 'o\nn\np\n\n\n+20M\nt\nc\nn\np\n\n\n\nw\n' | fdisk rootfs.img
+$ echo -e 'o\nn\np\n\n\n+32M\nt\nc\nn\np\n\n\n\nw\n' | fdisk rootfs.img
 # export LOOPBACK=`losetup -P -f --show rootfs.img`
 # mkfs.vfat "${LOOPBACK}p1"
 # mkfs.ext4 -O^64bit "${LOOPBACK}p2"
@@ -33,5 +33,5 @@ QEMU currently partially supports Raspberry Pi 2 emulation. You can try Spartan 
 
 ```
 cd /path/to/rootfs
-qemu-system-arm -M raspi2 -kernel boot/kernel7.img -append "$(cat boot/cmdline.txt)" -dtb boot/bcm2836-rpi-2-b.dtb -sd rootfs.img
+qemu-system-arm -M raspi2 -kernel boot/kernel7.img -append "$(cat boot/cmdline.txt)" -dtb boot/bcm2709-rpi-2-b.dtb -sd rootfs.img
 ```
