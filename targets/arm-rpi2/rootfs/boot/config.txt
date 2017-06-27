@@ -1,3 +1,3 @@
-gpu_mem=64
+gpu_mem=16
 kernel=kernel7.img
 device_tree=bcm2709-rpi-2-b.dtb
