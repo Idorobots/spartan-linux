@@ -80,6 +80,7 @@ $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).$(
 
 $(BUILD_DIR)/kernel: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
 	cp $(TARGET_DIR)/kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) oldconfig
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
 	$(call install_kernel,$@,$(BUILD_DIR)/linux-$(KERNEL_VERSION))
 
@@ -92,6 +93,7 @@ $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSI
 
 $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(TARGET_DIR)/busybox.config
 	cp $(TARGET_DIR)/busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
+	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) oldconfig
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) install CONFIG_PREFIX="$@"
 
