@@ -4,7 +4,8 @@ CTNG_URL=https://github.com/crosstool-ng/crosstool-ng/archive/$(CTNG_VERSION).ta
 PATCH_CTNG=true
 
 KERNEL_VERSION=4.11.3
-KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).tar.xz
+KERNEL_EXTENSION=tar.xz
+KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION)
 
 BUSYBOX_VERSION=1.26.2
 BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
@@ -29,26 +30,26 @@ TOOLCHAIN_DIR=$(BUILD_DIR)/toolchain
 TOOLCHAIN_CC_DIR=$(TOOLCHAIN_DIR)/bin
 TOOLCHAIN_CC_PREFIX=$(TOOLCHAIN_CC_DIR)/$(HOST)-
 
+export ARCH
+export CROSS_COMPILE=$(TOOLCHAIN_CC_PREFIX)
+export PATH:=$(TOOLCHAIN_CC_DIR):$(PATH)
+
 VPATH=$(BUILD_DIR)
 
 all: $(DIST_DIR)
 
-$(BUILD_DIR):
-	mkdir -p $@
-
 $(TARBALLS_DIR):
-	mkdir -p $@
-
-$(TOOLCHAIN_DIR): $(BUILD_DIR)
 	mkdir -p $@
 
 $(TARBALLS_DIR)/$(CTNG_VERSION).tar.gz: $(TARBALLS_DIR)
 	wget $(CTNG_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(TARBALLS_DIR)/$(CTNG_VERSION).tar.gz
+	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(CTNG): $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
+	mkdir -p $(CTNG_DIR)
 
 ifeq ($(PATCH_CTNG), true)
 	if ! [ -z $${LIBRARY_PATH+dummy} ]; then echo "LIBRARY_PATH is set; crosstool-ng build won't work."; false; fi
@@ -60,53 +61,53 @@ endif
 ifeq ($(PATCH_CTNG), true)
 	patch -p0 -d $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) -N < crosstool-ng.patch; true
 endif
-
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) install
 
-$(TOOLCHAIN_CC_DIR): $(BUILD_DIR) $(TARBALLS_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
+$(TOOLCHAIN_CC_DIR): $(TARBALLS_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
+	mkdir -p $(TOOLCHAIN_DIR)
 	cp $(TARGET_DIR)/crosstool-ng.config $(BUILD_DIR)/.config
 	sed -i -r "s:(CT_LOCAL_TARBALLS_DIR).+:\1=$(TARBALLS_DIR):" $(BUILD_DIR)/.config
 	sed -i -r "s:(CT_PREFIX_DIR).+:\1=$(TOOLCHAIN_DIR):" $(BUILD_DIR)/.config
 	(cd $(BUILD_DIR) ; $(CTNG) build)
 
-$(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz: $(TARBALLS_DIR)
+$(TARBALLS_DIR)/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION): $(TARBALLS_DIR)
 	wget $(KERNEL_URL) -N -P $(TARBALLS_DIR)
 
-$(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz
+$(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION)
+	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/kernel: $(BUILD_DIR) $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
+$(BUILD_DIR)/kernel: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
 	cp $(TARGET_DIR)/kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
-	- mkdir $@
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(KERNEL_INSTALL_COMMAND) INSTALL_PATH=$@ ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) headers_install INSTALL_HDR_PATH=$@/headers ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) modules_install INSTALL_MOD_PATH=$@/modules ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"; true
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) firmware_install INSTALL_FW_PATH=$@/firmware ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"; true
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) dtbs_install INSTALL_PATH=$@ ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"; true
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) oldconfig
+	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
+	$(call install_kernel,$@,$(BUILD_DIR)/linux-$(KERNEL_VERSION))
 
 $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(BUSYBOX_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
+	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(TARGET_DIR)/busybox.config
 	cp $(TARGET_DIR)/busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
-	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
-	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) install CONFIG_PREFIX="$@" ARCH=$(ARCH) CROSS_COMPILE="$(TOOLCHAIN_CC_PREFIX)"
+	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) oldconfig
+	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)
+	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) install CONFIG_PREFIX="$@"
 
 $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(TARBALLS_DIR)
 	wget $(DROPBEAR_URL) -N -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
+	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
 $(BUILD_DIR)/dropbearmulti: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)
-	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib --host="$(HOST)" PATH="$(TOOLCHAIN_CC_DIR):$$PATH)")
-	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) MULTI=1 STATIC=1 PROGRAMS="$(DROPBEAR_PROGRAMS)" PATH="$(TOOLCHAIN_CC_DIR):$$PATH)"
-	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) strip MULTI=1 PATH="$(TOOLCHAIN_CC_DIR):$$PATH)"
+	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib --host="$(HOST)")
+	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) MULTI=1 STATIC=1 PROGRAMS="$(DROPBEAR_PROGRAMS)"
+	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) strip MULTI=1
 	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/dropbearmulti $(BUILD_DIR)
 
 $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti rootfs
@@ -118,11 +119,10 @@ $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti
 	install -d -m 1777 $(DIST_DIR)/fs/tmp
 	cp -r rootfs/* $(DIST_DIR)/fs/
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
+	cp -r $(BUILD_DIR)/kernel/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
 	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
-	for util in $(DROPBEAR_PROGRAMS); do ln -s dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
-	cp $(BUILD_DIR)/kernel/vmlinuz* $(DIST_DIR)/fs/boot/vmlinuz-$(KERNEL_VERSION)
-	ln -s vmlinuz-$(KERNEL_VERSION) $(DIST_DIR)/fs/boot/vmlinuz
+	for util in $(DROPBEAR_PROGRAMS); do ln -fs dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
 
 clean:
 	rm -rf $(BUILD_DIR); true

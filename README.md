@@ -4,6 +4,7 @@ A Linux kernel with statically-compiled Busybox & Dropbear userspace. Supported 
 
 - [x86_64-generic](targets/x86_64-generic)
 - [i386-generic](targets/i386-generic)
+- [arm-rpi2](targets/arm-rpi2)
 
 Prerequisites:
 
