@@ -91,7 +91,7 @@ $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSI
 	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(TARGET_DIR)/busybox.config
+$(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) busybox.config
 	cp $(TARGET_DIR)/busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) oldconfig
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)
