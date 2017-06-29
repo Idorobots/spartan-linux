@@ -13,10 +13,10 @@ Create a suitable-sized file in `/path/to/image/rootfs.img`, mount it as a loopb
 ```
 $ cd /path/to/image
 $ fallocate -l64M rootfs.img
-$ echo -e 'mktable mac\nmkpart primary hfs 1MB 3MB\nmkpart primary ext3 3MB 100%\nquit\n' | parted rootfs.img
+$ echo -e 'mktable mac\nmkpart primary hfs 1MB 3MB\nmkpart primary ext4 3MB 100%\nquit\n' | parted rootfs.img
 # export LOOPBACK=`losetup -P -f --show rootfs.img`
 # hformat "${LOOPBACK}p2"
-# mkfs.ext3 -O^64bit "${LOOPBACK}p3"
+# mkfs.ext4 -O^64bit "${LOOPBACK}p3"
 $ mkdir bootcode
 # mount "${LOOPBACK}p2" bootcode
 # cp /path/to/dist/fs/boot/yaboot* bootcode
