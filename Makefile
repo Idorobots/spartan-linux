@@ -1,7 +1,6 @@
 # CTNG_VERSION=crosstool-ng-1.24.0
 CTNG_VERSION=a9f8a8e67509547a53b9b4781734e2b482b75b4e
 CTNG_URL=https://github.com/crosstool-ng/crosstool-ng/archive/$(CTNG_VERSION).tar.gz
-PATCH_CTNG=true
 
 KERNEL_VERSION=4.11.3
 KERNEL_EXTENSION=tar.xz
@@ -16,6 +15,7 @@ DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 
 TARGET=x86_64-generic
 
+COMMON_DIR=$(shell pwd)/common
 TARBALLS_DIR=$(shell pwd)/cache
 TARGET_DIR=$(shell pwd)/targets/$(TARGET)
 BUILD_DIR=$(shell pwd)/build/$(TARGET)
@@ -48,19 +48,13 @@ $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION): $(TARBALLS_DIR)/$(CTNG_VERSION).tar.g
 	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(CTNG): $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
+$(CTNG): $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) $(COMMON_DIR)/crosstool-ng.patch
 	mkdir -p $(CTNG_DIR)
-
-ifeq ($(PATCH_CTNG), true)
 	if ! [ -z $${LIBRARY_PATH+dummy} ]; then echo "LIBRARY_PATH is set; crosstool-ng build won't work."; false; fi
 	if ! [ -z $${LD_LIBRARY_PATH+dummy} ]; then echo "LD_LIBRARY_PATH is set; crosstool-ng build won't work."; false; fi
-endif
 	(cd $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) ; ./bootstrap)
 	(cd $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) ; ./configure --prefix="$(CTNG_DIR)")
-
-ifeq ($(PATCH_CTNG), true)
-	patch -p0 -d $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) -N < crosstool-ng.patch; true
-endif
+	patch -p0 -d $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) -N < $(COMMON_DIR)/crosstool-ng.patch; true
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/crosstool-ng-$(CTNG_VERSION) install
 
@@ -91,8 +85,8 @@ $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSI
 	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(TARGET_DIR)/busybox.config
-	cp $(TARGET_DIR)/busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
+$(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(COMMON_DIR)/busybox.config
+	cp $(COMMON_DIR)/busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) oldconfig
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) install CONFIG_PREFIX="$@"
@@ -104,26 +98,26 @@ $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(TARBALLS_DIR)/dropbear-$(DROPBEAR_V
 	mkdir -p $(BUILD_DIR)
 	tar -xf $^ -C $(BUILD_DIR)
 
-$(BUILD_DIR)/dropbearmulti: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)
+$(BUILD_DIR)/dropbear: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)
+	mkdir -p $@/bin
 	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib --host="$(HOST)")
 	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) MULTI=1 STATIC=1 PROGRAMS="$(DROPBEAR_PROGRAMS)"
 	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) strip MULTI=1
-	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/dropbearmulti $(BUILD_DIR)
+	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/dropbearmulti $@/bin
+	for util in $(DROPBEAR_PROGRAMS); do ln -fs dropbearmulti $@/bin/$$util; done
 
-$(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbearmulti rootfs
+$(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbear $(COMMON_DIR)/rootfs
 	mkdir -p $(DIST_DIR)/fs
 	mkdir -p $(DIST_DIR)/fs/{bin,boot,dev,etc,home,lib,mnt,opt,proc,run,sbin,srv,sys}
 	mkdir -p $(DIST_DIR)/fs/usr/{bin,sbin,include,lib,share,src}
 	mkdir -p $(DIST_DIR)/fs/var/{lib,lock,log,run,spool}
 	install -d -m 0750 $(DIST_DIR)/fs/root
 	install -d -m 1777 $(DIST_DIR)/fs/tmp
-	cp -r rootfs/* $(DIST_DIR)/fs/
+	cp -r $(COMMON_DIR)/rootfs/* $(DIST_DIR)/fs/
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/kernel/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
-	cp $(BUILD_DIR)/dropbearmulti $(DIST_DIR)/fs/bin/
-	for util in $(DROPBEAR_PROGRAMS); do ln -fs dropbearmulti $(DIST_DIR)/fs/bin/$$util; done
-
+	cp -r $(BUILD_DIR)/dropbear/* $(DIST_DIR)/fs/
 clean:
 	rm -rf $(BUILD_DIR); true
 	rm -rf $(DIST_DIR); true
