@@ -9,13 +9,10 @@ KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).
 BUSYBOX_VERSION=1.26.2
 BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
 
-DROPBEAR_VERSION=2017.75
-DROPBEAR_URL=https://matt.ucc.asn.au/dropbear/dropbear-$(DROPBEAR_VERSION).tar.bz2
-DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
-
 TARGET=x86_64-generic
 
 COMMON_DIR=$(shell pwd)/common
+PACKAGES_DIR=$(shell pwd)/packages
 TARBALLS_DIR=$(shell pwd)/cache
 TARGET_DIR=$(shell pwd)/targets/$(TARGET)
 BUILD_DIR=$(shell pwd)/build/$(TARGET)
@@ -31,6 +28,7 @@ TOOLCHAIN_CC_DIR=$(TOOLCHAIN_DIR)/bin
 TOOLCHAIN_CC_PREFIX=$(TOOLCHAIN_CC_DIR)/$(HOST)-
 
 export ARCH
+export HOST
 export CROSS_COMPILE=$(TOOLCHAIN_CC_PREFIX)
 export PATH:=$(TOOLCHAIN_CC_DIR):$(PATH)
 
@@ -91,20 +89,11 @@ $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) install CONFIG_PREFIX="$@"
 
-$(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(TARBALLS_DIR)
-	wget $(DROPBEAR_URL) -N -P $(TARBALLS_DIR)
-
-$(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION): $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
-	mkdir -p $(BUILD_DIR)
-	tar -xf $^ -C $(BUILD_DIR)
-
-$(BUILD_DIR)/dropbear: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)
-	mkdir -p $@/bin
-	(cd $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) ; ./configure --disable-zlib --host="$(HOST)")
-	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) MULTI=1 STATIC=1 PROGRAMS="$(DROPBEAR_PROGRAMS)"
-	$(MAKE) -C $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION) strip MULTI=1
-	cp $(BUILD_DIR)/dropbear-$(DROPBEAR_VERSION)/dropbearmulti $@/bin
-	for util in $(DROPBEAR_PROGRAMS); do ln -fs dropbearmulti $@/bin/$$util; done
+$(BUILD_DIR)/dropbear: $(TOOLCHAIN_CC_DIR) $(PACKAGES_DIR)/dropbear
+	mkdir -p $@
+	cp -r $(PACKAGES_DIR)/dropbear/* $@
+	$(MAKE) -C $@ TARBALLS_DIR=$(TARBALLS_DIR)
+	$(MAKE) -C $@ install INSTALL_PREFIX=$(DIST_DIR)/fs
 
 $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbear $(COMMON_DIR)/rootfs
 	mkdir -p $(DIST_DIR)/fs
@@ -117,7 +106,7 @@ $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbear $(CO
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/kernel/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
-	cp -r $(BUILD_DIR)/dropbear/* $(DIST_DIR)/fs/
+
 clean:
 	rm -rf $(BUILD_DIR); true
 	rm -rf $(DIST_DIR); true
