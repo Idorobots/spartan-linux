@@ -18,9 +18,11 @@ dropbear-$(DROPBEAR_VERSION)/dropbearmulti: dropbear-$(DROPBEAR_VERSION)
 	$(MAKE) -C dropbear-$(DROPBEAR_VERSION) MULTI=1 STATIC=1 PROGRAMS="$(DROPBEAR_PROGRAMS)"
 	$(MAKE) -C dropbear-$(DROPBEAR_VERSION) strip MULTI=1
 
-install: dropbear-$(DROPBEAR_VERSION)/dropbearmulti
+install: dropbear-$(DROPBEAR_VERSION)/dropbearmulti runit.run
 	mkdir -p $(INSTALL_PREFIX)/bin
 	cp dropbear-$(DROPBEAR_VERSION)/dropbearmulti $(INSTALL_PREFIX)/bin
 	for util in $(DROPBEAR_PROGRAMS); do ln -fs dropbearmulti $(INSTALL_PREFIX)/bin/$$util; done
+	mkdir -p $(INSTALL_PREFIX)/etc/init.d/dropbear
+	cp runit.run $(INSTALL_PREFIX)/etc/init.d/dropbear/run
 
 .PHONY: install
