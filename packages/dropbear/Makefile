@@ -8,7 +8,7 @@ INSTALL_PREFIX=$(shell pwd)
 all: dropbear-$(DROPBEAR_VERSION)/dropbearmulti
 
 $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2: $(TARBALLS_DIR)
-	wget $(DROPBEAR_URL) -N -P $(TARBALLS_DIR)
+	wget $(DROPBEAR_URL) -N -T 5 -P $(TARBALLS_DIR)
 
 dropbear-$(DROPBEAR_VERSION): $(TARBALLS_DIR)/dropbear-$(DROPBEAR_VERSION).tar.bz2
 	tar -xf $^

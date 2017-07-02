@@ -64,7 +64,7 @@ $(TOOLCHAIN_CC_DIR): $(TARBALLS_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
 	(cd $(BUILD_DIR) ; $(CTNG) build)
 
 $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION): $(TARBALLS_DIR)
-	wget $(KERNEL_URL) -N -P $(TARBALLS_DIR)
+	wget $(KERNEL_URL) -N -T 5 -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION)
 	mkdir -p $(BUILD_DIR)
@@ -77,7 +77,7 @@ $(BUILD_DIR)/kernel: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(
 	$(call install_kernel,$@,$(BUILD_DIR)/linux-$(KERNEL_VERSION))
 
 $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
-	wget $(BUSYBOX_URL) -N -P $(TARBALLS_DIR)
+	wget $(BUSYBOX_URL) -N -T 5 -P $(TARBALLS_DIR)
 
 $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
 	mkdir -p $(BUILD_DIR)
