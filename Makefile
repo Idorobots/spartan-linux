@@ -89,20 +89,21 @@ $(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)
 	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) install CONFIG_PREFIX="$@"
 
-$(BUILD_DIR)/dropbear: $(TOOLCHAIN_CC_DIR) $(PACKAGES_DIR)/dropbear
-	mkdir -p $@
-	cp -r $(PACKAGES_DIR)/dropbear/* $@
-	$(MAKE) -C $@ TARBALLS_DIR=$(TARBALLS_DIR)
-	$(MAKE) -C $@ install INSTALL_PREFIX=$(DIST_DIR)/fs
+PACKAGES=base dropbear
 
-$(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(BUILD_DIR)/dropbear $(COMMON_DIR)/rootfs
-	mkdir -p $(DIST_DIR)/fs
-	mkdir -p $(DIST_DIR)/fs/{bin,boot,dev,etc,home,lib,mnt,opt,proc,run,sbin,srv,sys}
-	mkdir -p $(DIST_DIR)/fs/usr/{bin,sbin,include,lib,share,src}
-	mkdir -p $(DIST_DIR)/fs/var/{lib,lock,log,run,spool}
-	install -d -m 0750 $(DIST_DIR)/fs/root
-	install -d -m 1777 $(DIST_DIR)/fs/tmp
-	cp -r $(COMMON_DIR)/rootfs/* $(DIST_DIR)/fs/
+define build_package =
+$(BUILD_DIR)/$(1): $(TOOLCHAIN_CC_DIR) $(PACKAGES_DIR)/$(1)
+	@echo "Building package $(1)"
+	mkdir -p $(BUILD_DIR)/$(1)
+	cp -r $(PACKAGES_DIR)/$(1)/* $(BUILD_DIR)/$(1)
+	$(MAKE) -C $(BUILD_DIR)/$(1) install INSTALL_PREFIX=$(DIST_DIR)/fs TARBALLS_DIR=$(TARBALLS_DIR)
+
+.PHONY: $(BUILD_DIR)/$(1)
+endef
+
+$(foreach PACKAGE,$(PACKAGES),$(eval $(call build_package,$(PACKAGE))))
+
+$(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/$(PACKAGE))
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/kernel/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
