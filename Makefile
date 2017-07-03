@@ -6,9 +6,6 @@ KERNEL_VERSION=4.11.3
 KERNEL_EXTENSION=tar.xz
 KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION)
 
-BUSYBOX_VERSION=1.26.2
-BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
-
 TARGET=x86_64-generic
 
 COMMON_DIR=$(shell pwd)/common
@@ -76,20 +73,7 @@ $(BUILD_DIR)/kernel: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
 	$(call install_kernel,$@,$(BUILD_DIR)/linux-$(KERNEL_VERSION))
 
-$(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2: $(TARBALLS_DIR)
-	wget $(BUSYBOX_URL) -N -T 5 -P $(TARBALLS_DIR)
-
-$(BUILD_DIR)/busybox-$(BUSYBOX_VERSION): $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2
-	mkdir -p $(BUILD_DIR)
-	tar -xf $^ -C $(BUILD_DIR)
-
-$(BUILD_DIR)/busybox: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) $(COMMON_DIR)/busybox.config
-	cp $(COMMON_DIR)/busybox.config $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)/.config
-	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) oldconfig
-	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION)
-	$(MAKE) -C $(BUILD_DIR)/busybox-$(BUSYBOX_VERSION) install CONFIG_PREFIX="$@"
-
-PACKAGES=base dropbear
+PACKAGES=base busybox dropbear
 
 define build_package =
 $(BUILD_DIR)/$(1): $(TOOLCHAIN_CC_DIR) $(PACKAGES_DIR)/$(1)
@@ -106,7 +90,6 @@ $(foreach PACKAGE,$(PACKAGES),$(eval $(call build_package,$(PACKAGE))))
 $(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/$(PACKAGE))
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/kernel/* $(DIST_DIR)/fs/
-	cp -r $(BUILD_DIR)/busybox/* $(DIST_DIR)/fs/
 
 clean:
 	rm -rf $(BUILD_DIR); true
