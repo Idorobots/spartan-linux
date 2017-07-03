@@ -73,7 +73,7 @@ $(BUILD_DIR)/kernel: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
 	$(call install_kernel,$@,$(BUILD_DIR)/linux-$(KERNEL_VERSION))
 
-PACKAGES=base busybox dropbear
+PACKAGES=base dropbear
 
 define build_package =
 $(BUILD_DIR)/$(1): $(TOOLCHAIN_CC_DIR) $(PACKAGES_DIR)/$(1)
@@ -87,7 +87,7 @@ endef
 
 $(foreach PACKAGE,$(PACKAGES),$(eval $(call build_package,$(PACKAGE))))
 
-$(DIST_DIR): $(BUILD_DIR)/kernel $(BUILD_DIR)/busybox $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/$(PACKAGE))
+$(DIST_DIR): $(BUILD_DIR)/kernel  $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/$(PACKAGE))
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
 	cp -r $(BUILD_DIR)/kernel/* $(DIST_DIR)/fs/
 
