@@ -2,10 +2,6 @@
 CTNG_VERSION=a9f8a8e67509547a53b9b4781734e2b482b75b4e
 CTNG_URL=https://github.com/crosstool-ng/crosstool-ng/archive/$(CTNG_VERSION).tar.gz
 
-KERNEL_VERSION=4.11.3
-KERNEL_EXTENSION=tar.xz
-KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION)
-
 TARGET=x86_64-generic
 
 COMMON_DIR=$(shell pwd)/common
@@ -60,19 +56,6 @@ $(TOOLCHAIN_CC_DIR): $(TARBALLS_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
 	sed -i -r "s:(CT_PREFIX_DIR).+:\1=$(TOOLCHAIN_DIR):" $(BUILD_DIR)/.config
 	(cd $(BUILD_DIR) ; $(CTNG) build)
 
-$(TARBALLS_DIR)/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION): $(TARBALLS_DIR)
-	wget $(KERNEL_URL) -N -T 5 -P $(TARBALLS_DIR)
-
-$(BUILD_DIR)/linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).$(KERNEL_EXTENSION)
-	mkdir -p $(BUILD_DIR)
-	tar -xf $^ -C $(BUILD_DIR)
-
-$(BUILD_DIR)/kernel: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(TARGET_DIR)/kernel.config
-	cp $(TARGET_DIR)/kernel.config $(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION) oldconfig
-	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
-	$(call install_kernel,$@,$(BUILD_DIR)/linux-$(KERNEL_VERSION))
-
 define build_package =
 $(BUILD_DIR)/$(1): $(TOOLCHAIN_CC_DIR) $(PACKAGES_DIR)/$(1)
 	@echo "Building package $(1)"
@@ -85,9 +68,8 @@ endef
 
 $(foreach PACKAGE,$(PACKAGES),$(eval $(call build_package,$(PACKAGE))))
 
-$(DIST_DIR): $(BUILD_DIR)/kernel  $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/$(PACKAGE))
+$(DIST_DIR): $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/$(PACKAGE))
 	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
-	cp -r $(BUILD_DIR)/kernel/* $(DIST_DIR)/fs/
 
 clean:
 	rm -rf $(BUILD_DIR); true
