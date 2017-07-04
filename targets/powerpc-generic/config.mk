@@ -1,5 +1,6 @@
 ARCH=powerpc
 HOST=powerpc-unknown-linux-musl
+PACKAGES=base dropbear
 
 # $(1) - destination directory
 # $(2) - kernel directory

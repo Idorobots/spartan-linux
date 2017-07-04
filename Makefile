@@ -73,8 +73,6 @@ $(BUILD_DIR)/kernel: $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/linux-$(KERNEL_VERSION) $(
 	$(MAKE) -C $(BUILD_DIR)/linux-$(KERNEL_VERSION)
 	$(call install_kernel,$@,$(BUILD_DIR)/linux-$(KERNEL_VERSION))
 
-PACKAGES=base dropbear
-
 define build_package =
 $(BUILD_DIR)/$(1): $(TOOLCHAIN_CC_DIR) $(PACKAGES_DIR)/$(1)
 	@echo "Building package $(1)"

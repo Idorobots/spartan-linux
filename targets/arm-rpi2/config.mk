@@ -1,5 +1,6 @@
 ARCH=arm
 HOST=arm-unknown-linux-musleabi
+PACKAGES=base dropbear
 
 FIRMWARE_BLOBS_VERSION=a878899b378a4421f009c49ddb33fc7206d540d1
 FIRMWARE_BLOBS_URL=https://github.com/raspberrypi/firmware/blob/$(FIRMWARE_BLOBS_VERSION)/boot

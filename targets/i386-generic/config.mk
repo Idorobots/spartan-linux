@@ -1,5 +1,6 @@
 ARCH=i386
 HOST=i486-unknown-linux-musl
+PACKAGES=base dropbear
 
 # $(1) - destination directory
 # $(2) - kernel directory
