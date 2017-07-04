@@ -1,27 +1,35 @@
-KERNEL_VERSION=4.11.3
-KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(KERNEL_VERSION).tar.xz
+NAME=linux-generic
+VERSION=4.11.3
 
-TARBALLS_DIR=$(shell pwd)
-INSTALL_PREFIX=$(shell pwd)
+KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(VERSION).tar.xz
 
-all: linux-$(KERNEL_VERSION)/vmlinuz
+TARBALLS_DIR=./cache
+INSTALL_PREFIX=./dist
+PACKAGE_PATH=.
 
-$(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz:
+PACKAGE=$(PACKAGE_PATH)/$(NAME)-$(VERSION)-$(ARCH).tar.gz
+
+$(TARBALLS_DIR)/linux-$(VERSION).tar.xz:
 	mkdir -p $(TARBALLS_DIR)
 	wget $(KERNEL_URL) -N -T 5 -P $(TARBALLS_DIR)
 
-linux-$(KERNEL_VERSION): $(TARBALLS_DIR)/linux-$(KERNEL_VERSION).tar.xz
+linux-$(VERSION): $(TARBALLS_DIR)/linux-$(VERSION).tar.xz
 	tar -xf $^
 
-linux-$(KERNEL_VERSION)/.config: linux-$(KERNEL_VERSION)
-	$(MAKE) -C linux-$(KERNEL_VERSION) defconfig
+linux-$(VERSION)/.config: linux-$(VERSION)
+	$(MAKE) -C linux-$(VERSION) defconfig
 
-linux-$(KERNEL_VERSION)/vmlinuz: linux-$(KERNEL_VERSION) linux-$(KERNEL_VERSION)/.config
-	$(MAKE) -C linux-$(KERNEL_VERSION) oldconfig
-	$(MAKE) -C linux-$(KERNEL_VERSION)
+linux-$(VERSION)/vmlinuz: linux-$(VERSION) linux-$(VERSION)/.config
+	$(MAKE) -C linux-$(VERSION) oldconfig
+	$(MAKE) -C linux-$(VERSION)
 
-install: linux-$(KERNEL_VERSION)/vmlinuz
+install: linux-$(VERSION)/vmlinuz
 	mkdir -p $(INSTALL_PREFIX)/boot
-	$(MAKE) -C linux-$(KERNEL_VERSION) install INSTALL_PATH=$(INSTALL_PREFIX)/boot
+	$(MAKE) -C linux-$(VERSION) install INSTALL_PATH=$(INSTALL_PREFIX)/boot
 
 .PHONY: install
+
+package: install
+	tar -czf $(PACKAGE) $(INSTALL_PREFIX)
+
+.PHONY: package

@@ -60,18 +60,19 @@ $(BUILD_DIR)/packages: $(PACKAGES_DIR)
 	mkdir -p $@
 	cp -r $(PACKAGES_DIR)/* $@
 
-define build_package =
-$(BUILD_DIR)/packages/$(1): $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/packages
-	@echo "Building package $(1)"
-	$(MAKE) -C $(BUILD_DIR)/packages/$(1) install INSTALL_PREFIX=$(DIST_DIR)/fs TARBALLS_DIR=$(TARBALLS_DIR)
+$(DIST_DIR): $(BUILD_DIR)/packages
+	mkdir $@/fs
+	for PACKAGE in $(PACKAGES);\
+	  do $(MAKE) -C $(BUILD_DIR)/packages/$$PACKAGE install INSTALL_PREFIX=$@/fs TARBALLS_DIR=$(TARBALLS_DIR);\
+	done
+	cp -r $(TARGET_DIR)/rootfs/* $@/fs/
 
-.PHONY: $(BUILD_DIR)/packages/$(1)
-endef
+packages: $(BUILD_DIR)/packages
+	for PACKAGE in $(PACKAGES);\
+	  do $(MAKE) -C $(BUILD_DIR)/packages/$$PACKAGE package PACKAGE_PATH=$(BUILD_DIR)/packages TARBALLS_DIR=$(TARBALLS_DIR);\
+	done
 
-$(foreach PACKAGE,$(PACKAGES),$(eval $(call build_package,$(PACKAGE))))
-
-$(DIST_DIR): $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/packages/$(PACKAGE))
-	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
+.PHONY: packages
 
 clean:
 	rm -rf $(BUILD_DIR); true

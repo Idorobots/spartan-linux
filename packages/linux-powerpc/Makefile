@@ -1,4 +1,6 @@
 include ../linux-generic/Makefile
 
-linux-$(KERNEL_VERSION)/.config: linux-$(KERNEL_VERSION) kernel.config
+NAME=linux-powerpc
+
+linux-$(VERSION)/.config: linux-$(VERSION) kernel.config
 	cp kernel.config $@
