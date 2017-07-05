@@ -71,7 +71,6 @@ endef
 $(foreach PACKAGE,$(PACKAGES),$(eval $(call build_package,$(PACKAGE))))
 
 $(DIST_DIR): $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/packages/$(PACKAGE))
-	cp -r $(TARGET_DIR)/rootfs/* $(DIST_DIR)/fs/
 
 clean:
 	rm -rf $(BUILD_DIR); true
