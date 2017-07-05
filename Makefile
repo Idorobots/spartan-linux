@@ -60,6 +60,8 @@ $(BUILD_DIR)/packages: $(PACKAGES_DIR)
 	mkdir -p $@
 	cp -r $(PACKAGES_DIR)/* $@
 
+.PHONY: $(BUILD_DIR)/packages
+
 define build_package =
 $(BUILD_DIR)/packages/$(1): $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/packages
 	@echo "Building package $(1)"
