@@ -56,23 +56,13 @@ $(TOOLCHAIN_CC_DIR): $(TARBALLS_DIR) $(CTNG) $(TARGET_DIR)/crosstool-ng.config
 	sed -i -r "s:(CT_PREFIX_DIR).+:\1=$(TOOLCHAIN_DIR):" $(BUILD_DIR)/.config
 	(cd $(BUILD_DIR) ; $(CTNG) build)
 
-$(BUILD_DIR)/packages: $(PACKAGES_DIR)
-	mkdir -p $@
-	cp -r $(PACKAGES_DIR)/* $@
+$(BUILD_DIR)/%.tar.gz: $(PACKAGES_DIR)/% $(TOOLCHAIN_CC_DIR)
+	@echo "Building package $@"
+	$(MAKE) -C $<  TARBALLS_DIR=$(TARBALLS_DIR) BUILD_DIR=$(BUILD_DIR) DIST_DIR=$(BUILD_DIR)/$(notdir $(basename $@)) INSTALL_PREFIX=$(BUILD_DIR)
 
-.PHONY: $(BUILD_DIR)/packages
-
-define build_package =
-$(BUILD_DIR)/packages/$(1): $(TOOLCHAIN_CC_DIR) $(BUILD_DIR)/packages
-	@echo "Building package $(1)"
-	$(MAKE) -C $(BUILD_DIR)/packages/$(1) install INSTALL_PREFIX=$(DIST_DIR)/fs TARBALLS_DIR=$(TARBALLS_DIR)
-
-.PHONY: $(BUILD_DIR)/packages/$(1)
-endef
-
-$(foreach PACKAGE,$(PACKAGES),$(eval $(call build_package,$(PACKAGE))))
-
-$(DIST_DIR): $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/packages/$(PACKAGE))
+$(DIST_DIR): $(foreach PACKAGE,$(PACKAGES),$(BUILD_DIR)/$(PACKAGE).tar.gz)
+	mkdir -p $(DIST_DIR)/fs
+	for package in $^; do tar -xf $$package -C $(DIST_DIR)/fs; done
 
 clean:
 	rm -rf $(BUILD_DIR); true

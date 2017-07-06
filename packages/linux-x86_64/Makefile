@@ -1,4 +1,6 @@
 include ../linux-generic/Makefile
 
-linux-$(KERNEL_VERSION)/.config: linux-$(KERNEL_VERSION) kernel.config
+NAME=linux-x86_64
+
+$(BUILD_DIR)/linux-$(KERNEL_VERSION)/.config: $(BUILD_DIR)/linux-$(KERNEL_VERSION) kernel.config
 	cp kernel.config $@

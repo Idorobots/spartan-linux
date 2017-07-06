@@ -1,9 +1,7 @@
-INSTALL_PREFIX=$(shell pwd)
+include ../package.mk
 
-all:
+NAME=syslinux
 
-install: syslinux.cfg
-	mkdir -p $(INSTALL_PREFIX)/boot/syslinux/
-	cp syslinux.cfg $(INSTALL_PREFIX)/boot/syslinux/
-
-.PHONY: install
+$(DIST_DIR): syslinux.cfg
+	mkdir -p $(DIST_DIR)/boot/syslinux/
+	cp syslinux.cfg $(DIST_DIR)/boot/syslinux/
