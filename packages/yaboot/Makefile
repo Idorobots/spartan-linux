@@ -1,9 +1,7 @@
-INSTALL_PREFIX=$(shell pwd)
+include ../package.mk
 
-all:
+NAME=yaboot
 
-install: yaboot yaboot.conf boot.msg
-	mkdir -p $(INSTALL_PREFIX)/boot
-	cp yaboot yaboot.conf boot.msg $(INSTALL_PREFIX)/boot
-
-.PHONY: install
+$(DIST_DIR): yaboot yaboot.conf boot.msg
+	mkdir -p $(DIST_DIR)/boot
+	cp yaboot yaboot.conf boot.msg $(DIST_DIR)/boot
