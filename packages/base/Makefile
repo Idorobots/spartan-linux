@@ -2,7 +2,7 @@ include ../package.mk
 
 NAME=base
 
-BUSYBOX_VERSION=1.26.2
+BUSYBOX_VERSION=1.29.3
 BUSYBOX_URL=https://www.busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
 
 $(TARBALLS_DIR)/busybox-$(BUSYBOX_VERSION).tar.bz2:

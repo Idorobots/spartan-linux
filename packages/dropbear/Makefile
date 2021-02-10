@@ -2,7 +2,7 @@ include ../package.mk
 
 NAME=dropbear
 
-DROPBEAR_VERSION=2017.75
+DROPBEAR_VERSION=2018.76
 DROPBEAR_URL=https://matt.ucc.asn.au/dropbear/dropbear-$(DROPBEAR_VERSION).tar.bz2
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 
